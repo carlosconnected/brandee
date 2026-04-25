@@ -2,7 +2,7 @@
 
 A full-stack animated AI chat web app built with Next.js 16, featuring a state-driven SVG avatar, Groq LLM backend, and Framer Motion animations.
 
-**Live demo:** [https://brandee-carlos.vercel.app/](https://https://brandee-carlos.vercel.app/)
+**Live demo:** [https://brandee-carlos.vercel.app/](https://brandee-carlos.vercel.app/)
 
 ## Features
 
