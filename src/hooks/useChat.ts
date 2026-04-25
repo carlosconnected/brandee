@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { AgentState, Message } from '@/types';
 
 const STORAGE_KEY = 'brandee-messages';
@@ -34,10 +34,11 @@ export function useChat() {
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Ref so sendMessage always reads the latest messages without being listed
+  // as a reactive dependency — avoids re-creating the handler on every update.
   const messagesRef = useRef(messages);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keep ref in sync so sendMessage always sees the latest messages
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -68,7 +69,10 @@ export function useChat() {
         ? 'listening'
         : 'idle';
 
-  const simulateTyping = useCallback((fullText: string, messageId: string, onDone: () => void) => {
+  // React Compiler (enabled in next.config.ts) memoizes functions automatically —
+  // useCallback wrappers are omitted intentionally.
+
+  function simulateTyping(fullText: string, messageId: string, onDone: () => void) {
     const words = fullText.split(' ');
     let idx = 0;
 
@@ -86,59 +90,56 @@ export function useChat() {
     }
 
     tick();
-  }, []);
+  }
 
-  const sendMessage = useCallback(
-    async (content: string) => {
-      const text = content.trim();
-      if (!text || isThinking || isSpeaking) return;
+  async function sendMessage(content: string) {
+    const text = content.trim();
+    if (!text || isThinking || isSpeaking) return;
 
-      const userMsg: Message = { id: uid(), role: 'user', content: text, timestamp: Date.now() };
-      const history = [...messagesRef.current, userMsg];
+    const userMsg: Message = { id: uid(), role: 'user', content: text, timestamp: Date.now() };
+    const history = [...messagesRef.current, userMsg];
 
-      setMessages(history);
-      setInputValue('');
-      setIsThinking(true);
+    setMessages(history);
+    setInputValue('');
+    setIsThinking(true);
 
-      try {
-        const apiMessages = history.map(({ role, content: c }) => ({ role, content: c }));
+    try {
+      const apiMessages = history.map(({ role, content: c }) => ({ role, content: c }));
 
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: apiMessages }),
-        });
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const { reply } = (await res.json()) as { reply: string };
-        const assistantId = uid();
+      const { reply } = (await res.json()) as { reply: string };
+      const assistantId = uid();
 
-        setIsThinking(false);
-        setMessages((prev) => [
-          ...prev,
-          { id: assistantId, role: 'assistant', content: '', timestamp: Date.now() },
-        ]);
-        setIsSpeaking(true);
+      setIsThinking(false);
+      setMessages((prev) => [
+        ...prev,
+        { id: assistantId, role: 'assistant', content: '', timestamp: Date.now() },
+      ]);
+      setIsSpeaking(true);
 
-        simulateTyping(reply, assistantId, () => setIsSpeaking(false));
-      } catch {
-        setIsThinking(false);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: uid(),
-            role: 'assistant',
-            content: 'Something went wrong. Please try again.',
-            timestamp: Date.now(),
-          },
-        ]);
-      }
-    },
-    [isThinking, isSpeaking, simulateTyping]
-  );
+      simulateTyping(reply, assistantId, () => setIsSpeaking(false));
+    } catch {
+      setIsThinking(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uid(),
+          role: 'assistant',
+          content: 'Something went wrong. Please try again.',
+          timestamp: Date.now(),
+        },
+      ]);
+    }
+  }
 
-  const clearChat = useCallback(() => {
+  function clearChat() {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     setMessages([]);
     setIsThinking(false);
@@ -148,7 +149,7 @@ export function useChat() {
     } catch {
       /* ignore */
     }
-  }, []);
+  }
 
   return {
     messages,
