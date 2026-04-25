@@ -22,8 +22,8 @@ export function SpeakingLines() {
         <motion.line
           key={i}
           x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke="#f472b6"
-          strokeWidth="2.6"
+          stroke="#7c3aed"
+          strokeWidth="5.2"
           strokeLinecap="round"
           animate={{ opacity: [0.15, 1, 0.15] }}
           transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay }}
