@@ -53,7 +53,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
           onClick={() => canSend && onSend(value)}
           disabled={!canSend}
           aria-label="Send message"
-          className="shrink-0 w-10 h-10 rounded-xl bg-brand hover:bg-brand-dark disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors duration-150"
+          className="shrink-0 w-10 h-10 rounded-xl bg-brand hover:bg-brand-dark disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-colors duration-150"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white translate-x-px">
             <path d="M3.105 2.289a.75.75 0 0 0-.826.95l1.414 4.925A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.896 28.896 0 0 0 15.293-7.154.75.75 0 0 0 0-1.115A28.897 28.897 0 0 0 3.105 2.289Z" />

@@ -44,7 +44,7 @@ export function ChatPanel({
         <button
           onClick={onClear}
           disabled={messages.length === 0}
-          className="flex items-center gap-1.5 text-xs font-medium text-muted border border-divider rounded-lg px-3 py-1.5 hover:border-divider-strong hover:text-content disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-muted border border-divider rounded-lg px-3 py-1.5 hover:border-divider-strong hover:text-content disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
         >
           <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 4h12M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M6 7v5M10 7v5M3.5 4l.75 9.5a.5.5 0 0 0 .5.5h6.5a.5.5 0 0 0 .5-.5L12.5 4" />

@@ -2,25 +2,17 @@
 
 import { motion } from 'framer-motion';
 
-// Short radiating lines around the head
-// All anchored near the face boundary and extending outward
+// 3 lines fanning out from each corner of the mouth
+// Mouth corners: left ≈ (128, 228), right ≈ (152, 228)
 const LINES = [
-  // top-right
-  { x1: 190, y1: 118, x2: 206, y2: 102, delay: 0 },
-  { x1: 205, y1: 140, x2: 224, y2: 130, delay: 0.12 },
-  // right
-  { x1: 216, y1: 168, x2: 238, y2: 162, delay: 0.06 },
-  { x1: 214, y1: 195, x2: 236, y2: 195, delay: 0.18 },
-  // bottom-right
-  { x1: 205, y1: 218, x2: 222, y2: 230, delay: 0.09 },
-  // top-left
-  { x1: 90, y1: 118, x2: 74, y2: 102, delay: 0.15 },
-  { x1: 75, y1: 140, x2: 56, y2: 130, delay: 0.03 },
-  // left
-  { x1: 64, y1: 168, x2: 42, y2: 162, delay: 0.21 },
-  { x1: 66, y1: 195, x2: 44, y2: 195, delay: 0.09 },
-  // bottom-left
-  { x1: 75, y1: 218, x2: 58, y2: 230, delay: 0.15 },
+  // left side — fan upward, horizontal, downward
+  { x1: 124, y1: 225, x2: 108, y2: 216, delay: 0.00 },
+  { x1: 122, y1: 232, x2: 104, y2: 232, delay: 0.14 },
+  { x1: 124, y1: 238, x2: 108, y2: 248, delay: 0.28 },
+  // right side — mirror
+  { x1: 156, y1: 225, x2: 172, y2: 216, delay: 0.07 },
+  { x1: 158, y1: 232, x2: 176, y2: 232, delay: 0.21 },
+  { x1: 156, y1: 238, x2: 172, y2: 248, delay: 0.35 },
 ] as const;
 
 export function SpeakingLines() {
@@ -33,14 +25,8 @@ export function SpeakingLines() {
           stroke="#f472b6"
           strokeWidth="2.6"
           strokeLinecap="round"
-          animate={{ opacity: [0, 1, 0], scale: [0.7, 1.2, 0.7] }}
-          style={{ originX: `${x1}px`, originY: `${y1}px` }}
-          transition={{
-            duration: 0.7,
-            repeat: Infinity,
-            ease: 'easeOut',
-            delay,
-          }}
+          animate={{ opacity: [0.15, 1, 0.15] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay }}
         />
       ))}
     </svg>
