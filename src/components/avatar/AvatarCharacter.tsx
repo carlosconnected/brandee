@@ -48,16 +48,16 @@ export function AvatarCharacter() {
       {/* brandee wordmark */}
       <text
         x="140"
-        y="316"
+        y="400"
         textAnchor="middle"
-        fontSize="13.5"
+        fontSize="40.5"
         fontFamily="Georgia, 'Times New Roman', serif"
         fontStyle="italic"
         fill="white"
         opacity="0.88"
-        letterSpacing="1.2"
+        letterSpacing="0.5"
       >
-        brandee
+        Brandee
       </text>
 
       {/* ── NECK ── */}

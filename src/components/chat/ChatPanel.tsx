@@ -34,8 +34,8 @@ export function ChatPanel({
             B
           </div>
           <div>
-            <p className="text-sm font-semibold text-content leading-none">Brandee</p>
-            <p className="text-[11px] text-muted leading-none mt-0.5">AI Chat Agent</p>
+            <p className="text-xl font-bold text-content leading-none">Brandee</p>
+            <p className="text-xs text-muted leading-none mt-1">AI Chat Agent</p>
           </div>
           {/* Online dot */}
           <span className="w-2 h-2 rounded-full bg-emerald-400 ml-1" />
@@ -44,8 +44,11 @@ export function ChatPanel({
         <button
           onClick={onClear}
           disabled={messages.length === 0}
-          className="text-xs text-muted hover:text-content disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1 rounded-lg hover:bg-card"
+          className="flex items-center gap-1.5 text-xs font-medium text-muted border border-divider rounded-lg px-3 py-1.5 hover:border-divider-strong hover:text-content disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
+          <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 4h12M5 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M6 7v5M10 7v5M3.5 4l.75 9.5a.5.5 0 0 0 .5.5h6.5a.5.5 0 0 0 .5-.5L12.5 4" />
+          </svg>
           Clear
         </button>
       </header>

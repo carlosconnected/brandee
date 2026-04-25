@@ -17,10 +17,10 @@ export default function Home() {
   } = useChat();
 
   return (
-    <div className="flex h-full bg-base p-3 gap-3 lg:p-5 lg:gap-4 overflow-hidden">
+    <div className="flex flex-col h-full bg-base p-2 gap-2 lg:flex-row lg:p-5 lg:gap-4 overflow-hidden">
 
-      {/* ── AVATAR CARD ── */}
-      <aside className="flex shrink-0 items-center justify-center order-1 lg:order-2 h-52 w-full lg:h-auto lg:w-[380px] bg-panel border border-divider rounded-2xl relative overflow-hidden">
+      {/* ── AVATAR CARD ── top strip on mobile, right panel on desktop */}
+      <aside className="shrink-0 order-1 lg:order-2 h-[20vh] w-full lg:h-auto lg:w-[380px] bg-panel border border-divider rounded-2xl relative overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -31,7 +31,7 @@ export default function Home() {
         <Avatar state={agentState} />
       </aside>
 
-      {/* ── CHAT CARD ── */}
+      {/* ── CHAT CARD ── fills remaining height on mobile, left panel on desktop */}
       <main className="flex flex-col flex-1 min-w-0 min-h-0 order-2 lg:order-1 bg-panel border border-divider rounded-2xl overflow-hidden">
         <ChatPanel
           messages={messages}

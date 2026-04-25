@@ -20,12 +20,10 @@ export function MessageItem({ message, isLastAssistant, isSpeaking }: MessageIte
       transition={{ duration: 0.22, ease: 'easeOut' }}
       className={`flex items-end gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
     >
-      {/* Avatar dot for assistant */}
-      {!isUser && (
-        <div className="shrink-0 w-7 h-7 rounded-full bg-brand flex items-center justify-center text-[10px] font-bold text-white mb-1">
-          B
-        </div>
-      )}
+      {/* Avatar dot */}
+      <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white mb-1 ${isUser ? 'bg-dim' : 'bg-brand'}`}>
+        {isUser ? 'I' : 'B'}
+      </div>
 
       <div
         className={`

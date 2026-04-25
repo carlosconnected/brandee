@@ -7,35 +7,43 @@ import { AvatarCharacter } from './AvatarCharacter';
 import { IndicatorLayer } from './IndicatorLayer';
 
 const STATE_LABELS: Record<AgentState, string> = {
-  idle: 'Resting...',
+  idle: 'Idle',
   listening: 'Listening',
-  thinking: 'Thinking...',
-  speaking: 'Responding',
+  thinking: 'Thinking',
+  speaking: 'Speaking',
 };
 
 interface AvatarProps {
   state: AgentState;
 }
 
-// React.memo prevents re-mounting the SVG character on every parent render
 export const Avatar = React.memo(function Avatar({ state }: AvatarProps) {
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full gap-4 px-4">
-      {/* Container for character + overlays — aspect ratio matches viewBox 280/420 ≈ 2/3 */}
-      <div className="relative w-full max-w-[280px] aspect-[2/3]">
-        {/* Base SVG character — always mounted, never swapped */}
+    <div className="relative flex flex-col items-center justify-center w-full h-full py-1 gap-1 lg:py-6 lg:gap-5">
+      {/*
+        Mobile:  height-driven — fills the 20vh card, width = h * (2/3)
+        Desktop: width-driven — max 280px wide, height follows aspect ratio
+      */}
+      <div className="relative h-full aspect-[2/3] lg:h-auto lg:w-full lg:max-w-[280px]">
         <AvatarCharacter />
-
-        {/* Animated overlay — swapped per state with AnimatePresence */}
         <AnimatePresence mode="wait">
           <IndicatorLayer key={state} state={state} />
         </AnimatePresence>
       </div>
 
-      {/* State label */}
-      <span className="text-xs font-medium tracking-[0.18em] uppercase text-muted select-none">
-        {STATE_LABELS[state]}
-      </span>
+      {/* Desktop pill — in flex flow, right below the character, 3× the mobile size */}
+      <div className="hidden lg:flex items-center bg-base/80 backdrop-blur-sm border border-divider rounded-full px-7 py-3">
+        <span className="text-[30px] font-medium text-muted leading-none select-none">
+          {STATE_LABELS[state]}
+        </span>
+      </div>
+
+      {/* Mobile pill — absolute bottom-left, compact */}
+      <div className="lg:hidden absolute bottom-2 left-2 flex items-center bg-base/80 backdrop-blur-sm border border-divider rounded-full px-2.5 py-1">
+        <span className="text-[10px] font-medium text-muted leading-none select-none">
+          {STATE_LABELS[state]}
+        </span>
+      </div>
     </div>
   );
 });
