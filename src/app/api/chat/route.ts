@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
+import { chatRequestSchema, MAX_TOTAL_CHARS } from '@/lib/schema';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -9,10 +10,21 @@ Keep your responses concise, clear, and engaging — usually 2-4 sentences unles
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const body = await request.json().catch(() => null);
 
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: 'messages is required' }, { status: 400 });
+    const parsed = chatRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? 'Invalid request.' },
+        { status: 400 }
+      );
+    }
+
+    const { messages } = parsed.data;
+
+    const totalChars = messages.reduce((sum, m) => sum + m.content.length, 0);
+    if (totalChars > MAX_TOTAL_CHARS) {
+      return NextResponse.json({ error: 'Message history is too long.' }, { status: 400 });
     }
 
     // Deliberate delay so the "thinking" animation is visible even on fast responses
@@ -25,7 +37,8 @@ export async function POST(request: NextRequest) {
       temperature: 0.7,
     });
 
-    const reply = completion.choices[0]?.message?.content ?? 'Sorry, I could not generate a response.';
+    const reply =
+      completion.choices[0]?.message?.content ?? 'Sorry, I could not generate a response.';
 
     return NextResponse.json({ reply });
   } catch (error) {
