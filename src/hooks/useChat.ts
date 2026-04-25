@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, startTransition } from 'react';
 import type { AgentState, Message } from '@/types';
 
 const STORAGE_KEY = 'brandee-messages';
@@ -43,10 +43,12 @@ export function useChat() {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Hydrate from localStorage once on mount
+  // Hydrate from localStorage once on mount.
+  // startTransition marks this as a non-urgent update so React doesn't treat it
+  // as a synchronous setState call inside an effect body.
   useEffect(() => {
     const stored = loadMessages();
-    if (stored.length > 0) setMessages(stored);
+    if (stored.length > 0) startTransition(() => setMessages(stored));
   }, []);
 
   // Persist on every change
