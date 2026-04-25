@@ -17,15 +17,10 @@ export default function Home() {
   } = useChat();
 
   return (
-    <div className="flex h-full bg-base overflow-hidden">
-      {/*
-        Mobile layout:  avatar panel stacked on top (compact), chat below
-        Desktop layout: chat on left, avatar panel on right
-      */}
+    <div className="flex h-full bg-base p-3 gap-3 lg:p-5 lg:gap-4 overflow-hidden">
 
-      {/* ── AVATAR PANEL ── */}
-      <aside className="flex shrink-0 items-center justify-center bg-panel border-b border-divider h-52 w-full lg:h-auto lg:w-[400px] lg:border-b-0 lg:border-l lg:border-divider order-1 lg:order-2 relative overflow-hidden">
-        {/* Radial glow in background */}
+      {/* ── AVATAR CARD ── */}
+      <aside className="flex shrink-0 items-center justify-center order-1 lg:order-2 h-52 w-full lg:h-auto lg:w-[380px] bg-panel border border-divider rounded-2xl relative overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -36,8 +31,8 @@ export default function Home() {
         <Avatar state={agentState} />
       </aside>
 
-      {/* ── CHAT PANEL ── */}
-      <main className="flex flex-col flex-1 min-w-0 min-h-0 order-2 lg:order-1">
+      {/* ── CHAT CARD ── */}
+      <main className="flex flex-col flex-1 min-w-0 min-h-0 order-2 lg:order-1 bg-panel border border-divider rounded-2xl overflow-hidden">
         <ChatPanel
           messages={messages}
           inputValue={inputValue}
@@ -48,6 +43,7 @@ export default function Home() {
           isSpeaking={isSpeaking}
         />
       </main>
+
     </div>
   );
 }
