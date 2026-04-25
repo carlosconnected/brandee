@@ -27,7 +27,7 @@ export function MessageItem({ message, isLastAssistant, isSpeaking }: MessageIte
 
       <div
         className={`
-          max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed
+          max-w-[75%] rounded-2xl px-4 py-2.5 text-[21px] leading-relaxed
           ${isUser
             ? 'bg-brand text-white rounded-br-sm'
             : 'bg-card text-content rounded-bl-sm border border-divider'
