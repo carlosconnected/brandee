@@ -23,11 +23,8 @@ export function MessageList({ messages, isSpeaking }: MessageListProps) {
   if (messages.length === 0) {
     return (
       <div className="flex flex-col flex-1 items-center justify-center gap-3 text-center px-8 select-none">
-        <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center text-2xl">
-          ✨
-        </div>
-        <p className="text-muted text-sm leading-relaxed max-w-[240px]">
-          Say hello to Brandee! Ask anything to get started.
+          <p className="text-muted text-[2.625rem] lg:text-[5.25rem] leading-snug max-w-sm lg:max-w-4xl">
+          Hi, I'm Brandee.<br />How can I help you today?
         </p>
       </div>
     );
