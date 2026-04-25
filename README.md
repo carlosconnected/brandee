@@ -63,17 +63,17 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Tech Stack
 
-| Layer          | Technology                           |
-| -------------- | ------------------------------------ |
-| Framework      | Next.js 16 (App Router)              |
-| Language       | TypeScript 5                         |
-| Frontend       | React 19.2                           |
-| Styling        | Tailwind CSS v4                      |
-| Animation      | Framer Motion v12                    |
-| LLM            | Groq (`llama-3.3-70b-versatile`)     |
-| Validation     | Zod v4                               |
-| Rate limiting  | Upstash Redis (`@upstash/ratelimit`) |
-| Automated test | Vitest v4                            |
+| Layer           | Technology                           | Why                                                                                                                                                  |
+| --------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router)              | Handles both the frontend and the API in a single project, with built-in middleware, server-side rendering, and seamless Vercel deployment           |
+| Language        | TypeScript 5                         | Catches bugs at compile time rather than at runtime, makes the codebase easier to understand and refactor safely                                     |
+| Frontend        | React 19.2                           | Industry-standard UI library with the React Compiler enabled, which automatically optimises re-renders without manual tuning                         |
+| Styling         | Tailwind CSS v4                      | Utility-first approach keeps styles co-located with components and eliminates unused CSS in production automatically                                 |
+| Animation       | Framer Motion v12                    | Best-in-class animation library for React — declarative, performant, and handles complex state transitions like the avatar indicator changes cleanly |
+| LLM             | Groq (`llama-3.3-70b-versatile`)     | Extremely fast inference speeds make the chat feel responsive; generous free tier and no credit card required to get started                         |
+| Validation      | Zod v4                               | Defines the data schema once and reuses it on both the client and the server, keeping validation logic consistent and type-safe                      |
+| Rate limiting   | Upstash Redis (`@upstash/ratelimit`) | Serverless-native Redis with a simple sliding window API — no infrastructure to manage, and integrates directly with Vercel                          |
+| Automated tests | Vitest v4                            | Faster than Jest, native TypeScript and ESM support, and a Jest-compatible API so there's no learning curve                                          |
 
 ## How the AI Agent Works
 
