@@ -132,47 +132,51 @@ State is managed in `useChat.ts` and flows down as a single `state: AgentState` 
 
 Right now the app supports a single ongoing conversation. With more time, I would allow users to start fresh chats, switch between past conversations, and organize them — similar to how ChatGPT or Claude handle conversation history.
 
-### 2. Better Avatar & Animation
-
-The current avatar is functional but basic. I would invest in a higher-quality design with smoother, more expressive animations — making the experience feel more lifelike and engaging.
-
-### 3. User Accounts
-
-Adding a proper sign-up and sign-in flow would let the app remember who you are across devices and sessions, and give each user their own private, personalized experience.
-
-### 4. More Layers of Security
-
-With user accounts in place, additional security measures become possible — such as email verification, password protection, and tying conversations to a specific user rather than just a browser. This makes the app significantly more robust and trustworthy.
-
-### 5. Voice Input
+### 2. Voice Input
 
 Adding a microphone button would let users speak their messages instead of typing them — making the interaction feel more natural, especially on mobile.
 
-### 6. Voice Output
+### 3. Voice Output
 
 The agent would also be able to speak its replies out loud, turning the experience into a true two-way voice conversation — much closer to talking to a real person.
 
-### 7. Multilingual Support
+### 4. File & Media Attachments
+
+Allow users to attach documents such as documents, images, audio, and video files as part of the conversation. this would let Brandee analyze a contract, describe an image, transcribe an audio clip, or even watch a video to identify problems, follow instructions, or extract key information — making the agent significantly more versatile and useful in real-world scenarios.
+
+### 5. Better Avatar & Animation
+
+The current avatar is functional but basic. I would invest in a higher-quality design with smoother, more expressive animations — making the experience feel more lifelike and engaging.
+
+### 6. User Accounts
+
+Adding a proper sign-up and sign-in flow would let the app remember who you are across devices and sessions, and give each user their own private, personalized experience.
+
+### 7. More Layers of Security
+
+With user accounts in place, additional security measures become possible — such as email verification, password protection, and tying conversations to a specific user rather than just a browser. This makes the app significantly more robust and trustworthy.
+
+### 8. Multilingual Support
 
 Allow users to interact with the agent in their preferred language. This opens the app up to a much wider audience and makes it feel more inclusive.
 
-### 8. Conversation Export
+### 9. Conversation Export
 
 Let users download or share their conversation as a PDF or text file — useful if the agent gave them valuable advice they want to save or reference later.
 
-### 9. Feedback System
+### 10. Feedback System
 
 Add a simple thumbs up / thumbs down button on each reply. This helps identify where the agent is performing well and where it needs improvement.
 
-### 10. Analytics Dashboard
+### 11. Analytics Dashboard
 
 Track how users interact with the app — most common questions, average session length, drop-off points. This data would be invaluable for improving the product over time.
 
-### 11. Mobile App
+### 12. Mobile App
 
 Package the experience as a native iOS and Android app for a smoother, faster experience on phones — with access to features like push notifications and the device microphone.
 
-### 12. Personality Customization
+### 13. Personality Customization
 
 Let users adjust the agent's tone — more formal, more casual, more concise — so the experience feels tailored to their preference.
 
