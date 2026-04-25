@@ -17,7 +17,8 @@ A full-stack animated AI chat web app built with Next.js 16, featuring a state-d
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5, React 19.2 |
+| Language | TypeScript 5 |
+| Frontend | React 19.2 |
 | Styling | Tailwind CSS v4 |
 | Animation | Framer Motion v12 |
 | LLM | Groq (`llama-3.3-70b-versatile`) |
@@ -108,7 +109,7 @@ src/
 
 ## Security
 
-- **Session cookies** — HMAC-SHA256 signed, `httpOnly`, `sameSite: strict`, `secure` in production. Enforced in production; skipped in development for ease of testing.
+- **Session cookies** — HMAC-SHA256 signed, `httpOnly`, `sameSite: strict`, `secure` in production. Enforced whenever `COOKIE_SECRET` is set.
 - **Input validation** — Zod schema enforced on both client and server. Roles `system`/`tool` are rejected to prevent prompt injection.
 - **Rate limiting** — 15 requests per IP per minute via Upstash sliding window.
 - **No CORS needed** — frontend and API share the same origin.
