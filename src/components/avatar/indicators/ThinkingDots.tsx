@@ -38,7 +38,7 @@ export function ThinkingDots() {
           cy={cy}
           r={4.5}
           fill="#a78bfa"
-          animate={{ cy: [cy, cy - 7, cy] }}
+          animate={{ y: [0, -7, 0] }}
           transition={{
             duration: 0.65,
             repeat: Infinity,
