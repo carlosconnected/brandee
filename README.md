@@ -19,7 +19,7 @@ A full-stack animated AI chat web app built with Next.js 16, featuring a state-d
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
+git clone git@github.com:carlosconnected/brandee.git
 cd brandee
 npm install
 ```
