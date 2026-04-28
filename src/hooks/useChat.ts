@@ -28,7 +28,11 @@ function persistMessages(messages: Message[]) {
   }
 }
 
-export function useChat() {
+interface UseChatOptions {
+  userName?: string;
+}
+
+export function useChat({ userName }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -111,7 +115,10 @@ export function useChat() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          ...(userName ? { userName } : {}),
+        }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

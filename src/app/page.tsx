@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import { useChat } from '@/hooks/useChat';
+import { useUser } from '@/hooks/useUser';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { Avatar } from '@/components/avatar/Avatar';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { LoginScreen } from '@/components/auth/LoginScreen';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, hydrated, signIn, signOut } = useUser();
   const {
     messages,
     inputValue,
@@ -17,16 +20,32 @@ export default function Home() {
     isSpeaking,
     sendMessage,
     clearChat,
-  } = useChat();
+  } = useChat({ userName: user?.name });
+
+  // Wait for localStorage hydration before deciding which screen to render —
+  // avoids a flash of the login form when the user is already signed in.
+  if (!hydrated) return null;
+
+  if (!user) {
+    return <LoginScreen onSignIn={signIn} />;
+  }
+
+  function handleSignOut() {
+    clearChat();
+    setSidebarOpen(false);
+    signOut();
+  }
 
   return (
     <div className="flex flex-col h-full bg-base p-2 gap-2 lg:flex-row lg:p-0 lg:gap-4 overflow-hidden">
 
-      {/* ── SIDEBAR ── drawer on mobile, fixed left column on desktop (now hosts the Brandee avatar) */}
+      {/* ── SIDEBAR ── drawer on mobile, fixed left column on desktop (hosts the desktop avatar) */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         agentState={agentState}
+        userName={user.name}
+        onSignOut={handleSignOut}
       />
 
       {/* ── HAMBURGER ── mobile only */}
@@ -65,6 +84,7 @@ export default function Home() {
           onClear={clearChat}
           isThinking={isThinking}
           isSpeaking={isSpeaking}
+          userName={user.name}
         />
       </main>
 

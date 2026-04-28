@@ -14,13 +14,15 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   agentState: AgentState;
+  userName: string;
+  onSignOut: () => void;
 }
 
 const NAV_ITEMS: NavItem[] = [
   {
     label: 'Dashboard',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
@@ -31,7 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Courses',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <path d="M4 19V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13" />
         <path d="M4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2" />
         <path d="M8 4v17" />
@@ -42,7 +44,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Chats',
     badge: '19',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
@@ -50,7 +52,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Services',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <rect x="2" y="7" width="20" height="14" rx="2" />
         <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
       </svg>
@@ -59,7 +61,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Consultations',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <path d="M3 11a9 9 0 0 1 18 0v5a3 3 0 0 1-3 3h-1v-7h4" />
         <path d="M21 11h-4v7h1a3 3 0 0 0 3-3" />
         <path d="M3 11h4v7H6a3 3 0 0 1-3-3z" />
@@ -69,7 +71,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Resources',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       </svg>
     ),
@@ -77,7 +79,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'My Certificates',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <circle cx="12" cy="9" r="6" />
         <path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5" />
       </svg>
@@ -86,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'My Team',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -97,7 +99,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Discover',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <circle cx="12" cy="12" r="10" />
         <path d="m16 8-4 8-4-8 8 0z" transform="rotate(45 12 12)" />
       </svg>
@@ -106,7 +108,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Pricing',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
         <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
         <circle cx="7" cy="7" r="1" fill="currentColor" />
       </svg>
@@ -116,7 +118,8 @@ const NAV_ITEMS: NavItem[] = [
 
 const ACTIVE_LABEL = 'Dashboard';
 
-export function Sidebar({ isOpen, onClose, agentState }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: SidebarProps) {
+  const initial = userName.trim().charAt(0).toUpperCase() || '?';
   // Lock body scroll when drawer is open on mobile
   useEffect(() => {
     if (isOpen) {
@@ -142,7 +145,7 @@ export function Sidebar({ isOpen, onClose, agentState }: SidebarProps) {
       <aside
         className={`
           fixed lg:relative inset-y-0 left-0 z-50
-          w-[260px] lg:w-[275px] shrink-0
+          w-[280px] lg:w-[344px] shrink-0
           bg-panel border-r border-divider
           flex flex-col
           transition-transform duration-300 ease-out
@@ -166,8 +169,8 @@ export function Sidebar({ isOpen, onClose, agentState }: SidebarProps) {
                   <button
                     type="button"
                     className={`
-                      w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
-                      text-sm font-medium transition-colors cursor-pointer
+                      w-full flex items-center gap-3.5 px-4 py-[9px] rounded-lg
+                      text-[18px] font-medium transition-colors cursor-pointer
                       ${active
                         ? 'bg-brand/15 text-brand-light'
                         : 'text-muted hover:text-content hover:bg-card/60'
@@ -177,7 +180,7 @@ export function Sidebar({ isOpen, onClose, agentState }: SidebarProps) {
                     <span className="shrink-0">{item.icon}</span>
                     <span className="flex-1 text-left">{item.label}</span>
                     {item.badge && (
-                      <span className="shrink-0 text-[10px] font-semibold bg-brand text-white rounded-full px-2 py-0.5 leading-none">
+                      <span className="shrink-0 text-xs font-semibold bg-brand text-white rounded-full px-2.5 py-0.5 leading-none">
                         {item.badge}
                       </span>
                     )}
@@ -204,11 +207,10 @@ export function Sidebar({ isOpen, onClose, agentState }: SidebarProps) {
         <div className="shrink-0 border-t border-divider p-3 flex flex-col gap-2">
           <div className="flex items-center gap-2.5 px-2 py-1">
             <div className="shrink-0 w-9 h-9 rounded-full bg-brand flex items-center justify-center text-xs font-bold text-white">
-              C
+              {initial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-content leading-tight truncate">Chris</p>
-              <p className="text-[11px] text-muted leading-tight truncate">chris@brandeepro.com</p>
+              <p className="text-[28px] font-semibold text-content leading-tight truncate">{userName}</p>
             </div>
             <button
               type="button"
@@ -223,7 +225,8 @@ export function Sidebar({ isOpen, onClose, agentState }: SidebarProps) {
           </div>
           <button
             type="button"
-            className="w-full text-sm font-medium text-muted border border-divider rounded-lg px-3 py-2 hover:border-divider-strong hover:text-content cursor-pointer transition-colors"
+            onClick={onSignOut}
+            className="w-full text-[17px] font-medium text-muted border border-divider rounded-lg px-3 py-2.5 hover:border-divider-strong hover:text-content cursor-pointer transition-colors"
           >
             Sign out
           </button>

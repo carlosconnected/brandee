@@ -3,6 +3,7 @@ import { z } from "zod";
 export const MAX_MESSAGES = 20;
 export const MAX_MSG_CHARS = 2_000;
 export const MAX_TOTAL_CHARS = 16_000;
+export const MAX_NAME_LENGTH = 50;
 
 export const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -11,6 +12,7 @@ export const messageSchema = z.object({
 
 export const chatRequestSchema = z.object({
   messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
+  userName: z.string().min(1).max(MAX_NAME_LENGTH).optional(),
 });
 
 export type ApiMessage = z.infer<typeof messageSchema>;

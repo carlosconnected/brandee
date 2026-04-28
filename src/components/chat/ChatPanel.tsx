@@ -12,6 +12,7 @@ interface ChatPanelProps {
   onClear: () => void;
   isThinking: boolean;
   isSpeaking: boolean;
+  userName: string;
 }
 
 export function ChatPanel({
@@ -22,6 +23,7 @@ export function ChatPanel({
   onClear,
   isThinking,
   isSpeaking,
+  userName,
 }: ChatPanelProps) {
   const isDisabled = isThinking || isSpeaking;
 
@@ -70,7 +72,7 @@ export function ChatPanel({
       )}
 
       {/* Messages */}
-      <MessageList messages={messages} isSpeaking={isSpeaking} />
+      <MessageList messages={messages} isSpeaking={isSpeaking} userName={userName} />
 
       {/* Input */}
       <div className="shrink-0 border-t border-divider">

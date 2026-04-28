@@ -7,9 +7,10 @@ import { MessageItem } from './MessageItem';
 interface MessageListProps {
   messages: Message[];
   isSpeaking: boolean;
+  userName: string;
 }
 
-export function MessageList({ messages, isSpeaking }: MessageListProps) {
+export function MessageList({ messages, isSpeaking, userName }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastLength = useRef(0);
 
@@ -24,7 +25,7 @@ export function MessageList({ messages, isSpeaking }: MessageListProps) {
     return (
       <div className="flex flex-col flex-1 items-center justify-center gap-3 text-center px-8 select-none">
           <p className="text-muted text-[2.625rem] lg:text-[5.25rem] leading-snug max-w-sm lg:max-w-4xl">
-          Hi, I'm Brandee.<br />How can I help you today?
+          Hi {userName}, I&apos;m Brandee.<br />How can I help you today?
         </p>
       </div>
     );
