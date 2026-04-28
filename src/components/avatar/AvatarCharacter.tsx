@@ -1,4 +1,22 @@
+'use client';
+
+import { useId } from 'react';
+
 export function AvatarCharacter() {
+  // Unique gradient IDs per instance — prevents collisions when multiple
+  // AvatarCharacter components render on the same page (e.g. mobile top
+  // strip + sidebar). Strip colons since they're not always safe in `url(#…)`.
+  const uid       = useId().replace(/:/g, '-');
+  const skinId    = `skin-${uid}`;
+  const hairId    = `hair-${uid}`;
+  const hoodieId  = `hoodie-${uid}`;
+  const bgGlowId  = `bg-${uid}`;
+
+  const skinFill   = `url(#${skinId})`;
+  const hairFill   = `url(#${hairId})`;
+  const hoodieFill = `url(#${hoodieId})`;
+  const bgGlowFill = `url(#${bgGlowId})`;
+
   return (
     <svg
       viewBox="0 0 280 420"
@@ -8,32 +26,32 @@ export function AvatarCharacter() {
       className="w-full h-full drop-shadow-2xl"
     >
       <defs>
-        <radialGradient id="skinGrad" cx="48%" cy="38%" r="58%">
+        <radialGradient id={skinId} cx="48%" cy="38%" r="58%">
           <stop offset="0%" stopColor="#f2c09e" />
           <stop offset="100%" stopColor="#cf7f4e" />
         </radialGradient>
-        <radialGradient id="hairGrad" cx="38%" cy="32%" r="68%">
+        <radialGradient id={hairId} cx="38%" cy="32%" r="68%">
           <stop offset="0%" stopColor="#3b1f0e" />
           <stop offset="100%" stopColor="#130804" />
         </radialGradient>
-        <linearGradient id="hoodieGrad" x1="0" y1="0" x2="0.6" y2="1">
+        <linearGradient id={hoodieId} x1="0" y1="0" x2="0.6" y2="1">
           <stop offset="0%" stopColor="#7c3aed" />
           <stop offset="50%" stopColor="#6d28d9" />
           <stop offset="100%" stopColor="#4c1d95" />
         </linearGradient>
-        <radialGradient id="bgGlow" cx="50%" cy="56%" r="50%">
+        <radialGradient id={bgGlowId} cx="50%" cy="56%" r="50%">
           <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.18" />
           <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
         </radialGradient>
       </defs>
 
       {/* Ambient glow behind character */}
-      <ellipse cx="140" cy="265" rx="130" ry="150" fill="url(#bgGlow)" />
+      <ellipse cx="140" cy="265" rx="130" ry="150" fill={bgGlowFill} />
 
       {/* ── BODY / HOODIE ── */}
       <path
         d="M 0 420 L 0 328 Q 8 298 52 280 Q 88 268 122 263 L 140 260 L 158 263 Q 192 268 228 280 Q 272 298 280 328 L 280 420 Z"
-        fill="url(#hoodieGrad)"
+        fill={hoodieFill}
       />
       {/* Hood shoulder curve behind neck */}
       <path
@@ -61,32 +79,32 @@ export function AvatarCharacter() {
       </text>
 
       {/* ── NECK ── */}
-      <rect x="124" y="255" width="32" height="30" rx="7" fill="url(#skinGrad)" />
+      <rect x="124" y="255" width="32" height="30" rx="7" fill={skinFill} />
 
       {/* ── HAIR BASE (behind head) ── */}
-      <ellipse cx="140" cy="180" rx="80" ry="88" fill="url(#hairGrad)" />
+      <ellipse cx="140" cy="180" rx="80" ry="88" fill={hairFill} />
 
       {/* ── FACE ── */}
-      <ellipse cx="140" cy="190" rx="64" ry="72" fill="url(#skinGrad)" />
+      <ellipse cx="140" cy="190" rx="64" ry="72" fill={skinFill} />
 
       {/* ── HAIR SIDES overlapping face edges ── */}
       <path
         d="M 62 155 Q 68 240 82 263 Q 73 232 76 172 Q 78 132 92 105 Q 80 130 62 155 Z"
-        fill="url(#hairGrad)"
+        fill={hairFill}
       />
       <path
         d="M 218 155 Q 212 240 198 263 Q 207 232 204 172 Q 202 132 188 105 Q 200 130 218 155 Z"
-        fill="url(#hairGrad)"
+        fill={hairFill}
       />
 
       {/* ── HAIR TOP flowing to bun ── */}
       <path
         d="M 78 140 Q 96 104 128 95 Q 140 91 152 95 Q 184 104 202 140 Q 188 108 168 100 Q 152 93 140 92 Q 128 93 112 100 Q 92 108 78 140 Z"
-        fill="url(#hairGrad)"
+        fill={hairFill}
       />
 
       {/* ── HAIR BUN ── */}
-      <circle cx="140" cy="96" r="44" fill="url(#hairGrad)" />
+      <circle cx="140" cy="96" r="44" fill={hairFill} />
       {/* Bun highlight sheen */}
       <ellipse cx="126" cy="83" rx="19" ry="11" fill="#3b1f0e" opacity="0.38" />
       {/* Bun wrap lines */}

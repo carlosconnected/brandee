@@ -15,9 +15,29 @@ const STATE_LABELS: Record<AgentState, string> = {
 
 interface AvatarProps {
   state: AgentState;
+  /** Compact layout — height-driven, no big desktop pill. Used inside the sidebar. */
+  compact?: boolean;
 }
 
-export const Avatar = React.memo(function Avatar({ state }: AvatarProps) {
+export const Avatar = React.memo(function Avatar({ state, compact = false }: AvatarProps) {
+  if (compact) {
+    return (
+      <div className="relative flex items-center justify-center w-full h-full">
+        <div className="relative h-full aspect-[2/3]">
+          <AvatarCharacter />
+          <AnimatePresence mode="wait">
+            <IndicatorLayer key={state} state={state} />
+          </AnimatePresence>
+        </div>
+        <div className="absolute bottom-2 left-2 flex items-center bg-base/80 backdrop-blur-sm border border-divider rounded-full px-2.5 py-1">
+          <span className="text-[10px] font-medium text-muted leading-none select-none">
+            {STATE_LABELS[state]}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex flex-col items-center justify-center w-full h-full py-1 gap-1 lg:py-6 lg:gap-5">
       {/*
