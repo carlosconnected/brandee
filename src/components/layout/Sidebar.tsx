@@ -3,10 +3,24 @@
 import { useEffect } from 'react';
 import type { AgentState } from '@/types';
 import { Avatar } from '@/components/avatar/Avatar';
+import {
+  ButterflyIcon,
+  CertificatesIcon,
+  ChatsIcon,
+  ConsultationsIcon,
+  CoursesIcon,
+  DashboardIcon,
+  DiscoverIcon,
+  PricingIcon,
+  ResourcesIcon,
+  ServicesIcon,
+  SettingsIcon,
+  TeamIcon,
+} from '@/components/icons';
 
 interface NavItem {
   label: string;
-  icon: React.ReactNode;
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   badge?: string;
 }
 
@@ -19,107 +33,23 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  {
-    label: 'Dashboard',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Courses',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <path d="M4 19V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13" />
-        <path d="M4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2" />
-        <path d="M8 4v17" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Chats',
-    badge: '19',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Services',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <rect x="2" y="7" width="20" height="14" rx="2" />
-        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Consultations',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <path d="M3 11a9 9 0 0 1 18 0v5a3 3 0 0 1-3 3h-1v-7h4" />
-        <path d="M21 11h-4v7h1a3 3 0 0 0 3-3" />
-        <path d="M3 11h4v7H6a3 3 0 0 1-3-3z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Resources',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      </svg>
-    ),
-  },
-  {
-    label: 'My Certificates',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <circle cx="12" cy="9" r="6" />
-        <path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5" />
-      </svg>
-    ),
-  },
-  {
-    label: 'My Team',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Discover',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <circle cx="12" cy="12" r="10" />
-        <path d="m16 8-4 8-4-8 8 0z" transform="rotate(45 12 12)" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Pricing',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-        <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-        <circle cx="7" cy="7" r="1" fill="currentColor" />
-      </svg>
-    ),
-  },
+  { label: 'Dashboard',       Icon: DashboardIcon },
+  { label: 'Courses',         Icon: CoursesIcon },
+  { label: 'Chats',           Icon: ChatsIcon, badge: '19' },
+  { label: 'Services',        Icon: ServicesIcon },
+  { label: 'Consultations',   Icon: ConsultationsIcon },
+  { label: 'Resources',       Icon: ResourcesIcon },
+  { label: 'My Certificates', Icon: CertificatesIcon },
+  { label: 'My Team',         Icon: TeamIcon },
+  { label: 'Discover',        Icon: DiscoverIcon },
+  { label: 'Pricing',         Icon: PricingIcon },
 ];
 
 const ACTIVE_LABEL = 'Dashboard';
 
 export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: SidebarProps) {
   const initial = userName.trim().charAt(0).toUpperCase() || '?';
+
   // Lock body scroll when drawer is open on mobile
   useEffect(() => {
     if (isOpen) {
@@ -155,17 +85,17 @@ export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: Si
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5 shrink-0">
-          <Butterfly />
+          <ButterflyIcon className="w-7 h-7" />
           <span className="text-xl font-bold tracking-wider text-content">BRANDEE</span>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto lg:flex-none lg:overflow-visible px-3 pb-4">
           <ul className="flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
-              const active = item.label === ACTIVE_LABEL;
+            {NAV_ITEMS.map(({ label, Icon, badge }) => {
+              const active = label === ACTIVE_LABEL;
               return (
-                <li key={item.label}>
+                <li key={label}>
                   <button
                     type="button"
                     className={`
@@ -177,11 +107,11 @@ export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: Si
                       }
                     `}
                   >
-                    <span className="shrink-0">{item.icon}</span>
-                    <span className="flex-1 text-left">{item.label}</span>
-                    {item.badge && (
+                    <Icon className="w-7 h-7 shrink-0" />
+                    <span className="flex-1 text-left">{label}</span>
+                    {badge && (
                       <span className="shrink-0 text-xs font-semibold bg-brand text-white rounded-full px-2.5 py-0.5 leading-none">
-                        {item.badge}
+                        {badge}
                       </span>
                     )}
                   </button>
@@ -217,10 +147,7 @@ export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: Si
               aria-label="Settings"
               className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-muted hover:text-content hover:bg-card/60 cursor-pointer transition-colors"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
+              <SettingsIcon className="w-4 h-4" />
             </button>
           </div>
           <button
@@ -233,39 +160,5 @@ export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: Si
         </div>
       </aside>
     </>
-  );
-}
-
-function Butterfly() {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-      <defs>
-        <linearGradient id="butterflyGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#ec4899" />
-        </linearGradient>
-      </defs>
-      {/* Wings */}
-      <path
-        d="M16 16 C 12 6, 4 6, 3 12 C 2 18, 8 22, 16 16 Z"
-        fill="url(#butterflyGrad)"
-      />
-      <path
-        d="M16 16 C 12 22, 4 26, 6 28 C 9 30, 14 24, 16 18 Z"
-        fill="url(#butterflyGrad)"
-        opacity="0.85"
-      />
-      <path
-        d="M16 16 C 20 6, 28 6, 29 12 C 30 18, 24 22, 16 16 Z"
-        fill="url(#butterflyGrad)"
-      />
-      <path
-        d="M16 16 C 20 22, 28 26, 26 28 C 23 30, 18 24, 16 18 Z"
-        fill="url(#butterflyGrad)"
-        opacity="0.85"
-      />
-      {/* Body */}
-      <line x1="16" y1="6" x2="16" y2="26" stroke="#1e0d40" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }

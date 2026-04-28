@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { ButterflyIcon } from '@/components/icons';
 
 interface LoginScreenProps {
   onSignIn: (name: string) => void;
@@ -23,7 +24,7 @@ export function LoginScreen({ onSignIn }: LoginScreenProps) {
       <div className="w-full max-w-md bg-panel border border-divider rounded-2xl p-8 shadow-2xl">
         {/* Logo + heading */}
         <div className="flex flex-col items-center gap-4 mb-8 text-center">
-          <Butterfly />
+          <ButterflyIcon className="w-14 h-14" />
           <div>
             <h1 className="text-3xl font-bold text-content leading-tight">Welcome to Brandee</h1>
             <p className="text-sm text-muted mt-2">Enter your name to start chatting.</p>
@@ -61,20 +62,3 @@ export function LoginScreen({ onSignIn }: LoginScreenProps) {
   );
 }
 
-function Butterfly() {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" className="w-14 h-14">
-      <defs>
-        <linearGradient id="loginButterflyGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#ec4899" />
-        </linearGradient>
-      </defs>
-      <path d="M16 16 C 12 6, 4 6, 3 12 C 2 18, 8 22, 16 16 Z" fill="url(#loginButterflyGrad)" />
-      <path d="M16 16 C 12 22, 4 26, 6 28 C 9 30, 14 24, 16 18 Z" fill="url(#loginButterflyGrad)" opacity="0.85" />
-      <path d="M16 16 C 20 6, 28 6, 29 12 C 30 18, 24 22, 16 16 Z" fill="url(#loginButterflyGrad)" />
-      <path d="M16 16 C 20 22, 28 26, 26 28 C 23 30, 18 24, 16 18 Z" fill="url(#loginButterflyGrad)" opacity="0.85" />
-      <line x1="16" y1="6" x2="16" y2="26" stroke="#1e0d40" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}

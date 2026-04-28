@@ -7,6 +7,7 @@ import { ChatPanel } from '@/components/chat/ChatPanel';
 import { Avatar } from '@/components/avatar/Avatar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { LoginScreen } from '@/components/auth/LoginScreen';
+import { MenuIcon } from '@/components/icons';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,11 +56,7 @@ export default function Home() {
         aria-label="Open menu"
         className="lg:hidden fixed top-3 left-3 z-30 w-9 h-9 rounded-lg bg-base/80 backdrop-blur-sm border border-divider flex items-center justify-center text-content cursor-pointer"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <line x1="3" y1="6"  x2="21" y2="6"  />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
+        <MenuIcon className="w-5 h-5" />
       </button>
 
       {/* ── AVATAR CARD ── mobile only top strip (desktop avatar lives inside the sidebar) */}

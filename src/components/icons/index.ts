@@ -1,0 +1,13 @@
+export { ButterflyIcon }      from './ButterflyIcon';
+export { CertificatesIcon }   from './CertificatesIcon';
+export { ChatsIcon }          from './ChatsIcon';
+export { ConsultationsIcon }  from './ConsultationsIcon';
+export { CoursesIcon }        from './CoursesIcon';
+export { DashboardIcon }      from './DashboardIcon';
+export { DiscoverIcon }       from './DiscoverIcon';
+export { MenuIcon }           from './MenuIcon';
+export { PricingIcon }        from './PricingIcon';
+export { ResourcesIcon }      from './ResourcesIcon';
+export { ServicesIcon }       from './ServicesIcon';
+export { SettingsIcon }       from './SettingsIcon';
+export { TeamIcon }           from './TeamIcon';
