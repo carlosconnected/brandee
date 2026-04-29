@@ -1,4 +1,13 @@
-export type AgentState = 'idle' | 'listening' | 'thinking' | 'speaking';
+export type BrandeeState =
+  | 'greeting'
+  | 'idle'
+  | 'bored'
+  | 'sleeping'
+  | 'listening'
+  | 'thinking'
+  | 'speaking'
+  | 'celebrating'
+  | 'confused';
 
 export interface Message {
   id: string;

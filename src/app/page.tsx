@@ -3,49 +3,57 @@
 import { useState } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useUser } from '@/hooks/useUser';
+import { useBrandeeState } from '@/components/brandee/useBrandeeState';
+import { clearGreetingHistory } from '@/components/brandee/greetingHistory';
 import { ChatPanel } from '@/components/chat/ChatPanel';
-import { Avatar } from '@/components/avatar/Avatar';
+import { Brandee } from '@/components/brandee/Brandee';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { MenuIcon } from '@/components/icons';
 
 export default function Home() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, hydrated, signIn, signOut } = useUser();
+
+  if (!hydrated) return null;
+  if (!user) return <LoginScreen onSignIn={signIn} />;
+
+  // Keyed by user.name so signing back in remounts the entire app subtree
+  // and replays the greeting animation. Also resets in-flight chat state.
+  return <SignedInApp key={user.name} userName={user.name} onSignOut={signOut} />;
+}
+
+function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () => void }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { state: brandeeState, setState: setBrandeeState, reportActivity } = useBrandeeState();
+
   const {
     messages,
     inputValue,
     setInputValue,
-    agentState,
     isThinking,
     isSpeaking,
     sendMessage,
     clearChat,
-  } = useChat({ userName: user?.name });
-
-  // Wait for localStorage hydration before deciding which screen to render —
-  // avoids a flash of the login form when the user is already signed in.
-  if (!hydrated) return null;
-
-  if (!user) {
-    return <LoginScreen onSignIn={signIn} />;
-  }
+  } = useChat({ userName, setBrandeeState });
 
   function handleSignOut() {
     clearChat();
+    clearGreetingHistory();
     setSidebarOpen(false);
-    signOut();
+    onSignOut();
   }
 
   return (
-    <div className="flex flex-col h-full bg-base p-2 gap-2 lg:flex-row lg:p-0 lg:gap-4 overflow-hidden">
-
+    <div
+      className="flex flex-col h-full bg-base p-2 gap-2 lg:flex-row lg:p-0 lg:gap-4 overflow-hidden"
+      onClick={reportActivity}
+    >
       {/* ── SIDEBAR ── drawer on mobile, fixed left column on desktop (hosts the desktop avatar) */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        agentState={agentState}
-        userName={user.name}
+        brandeeState={brandeeState}
+        userName={userName}
         onSignOut={handleSignOut}
       />
 
@@ -60,7 +68,7 @@ export default function Home() {
       </button>
 
       {/* ── AVATAR CARD ── mobile only top strip (desktop avatar lives inside the sidebar) */}
-      <aside className="lg:hidden shrink-0 order-1 h-[20vh] w-full bg-panel border border-divider rounded-2xl relative overflow-hidden">
+      <aside className="lg:hidden shrink-0 order-1 h-[20vh] w-full bg-panel border border-divider rounded-2xl relative overflow-hidden flex items-center justify-center">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -68,7 +76,7 @@ export default function Home() {
               'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
           }}
         />
-        <Avatar state={agentState} />
+        <Brandee state={brandeeState} size={130} />
       </aside>
 
       {/* ── CHAT CARD ── fills remaining space (chat is now the only main panel on desktop) */}
@@ -81,10 +89,11 @@ export default function Home() {
           onClear={clearChat}
           isThinking={isThinking}
           isSpeaking={isSpeaking}
-          userName={user.name}
+          userName={userName}
+          onActivity={reportActivity}
+          setBrandeeState={setBrandeeState}
         />
       </main>
-
     </div>
   );
 }

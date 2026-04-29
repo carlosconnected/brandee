@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { AgentState } from '@/types';
-import { Avatar } from '@/components/avatar/Avatar';
+import type { BrandeeState } from '@/types';
+import { Brandee } from '@/components/brandee/Brandee';
 import {
   ButterflyIcon,
   CertificatesIcon,
@@ -10,8 +10,6 @@ import {
   ConsultationsIcon,
   CoursesIcon,
   DashboardIcon,
-  DiscoverIcon,
-  PricingIcon,
   ResourcesIcon,
   ServicesIcon,
   SettingsIcon,
@@ -27,7 +25,7 @@ interface NavItem {
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  agentState: AgentState;
+  brandeeState: BrandeeState;
   userName: string;
   onSignOut: () => void;
 }
@@ -41,13 +39,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Resources',       Icon: ResourcesIcon },
   { label: 'My Certificates', Icon: CertificatesIcon },
   { label: 'My Team',         Icon: TeamIcon },
-  { label: 'Discover',        Icon: DiscoverIcon },
-  { label: 'Pricing',         Icon: PricingIcon },
 ];
 
 const ACTIVE_LABEL = 'Dashboard';
 
-export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, brandeeState, userName, onSignOut }: SidebarProps) {
   const initial = userName.trim().charAt(0).toUpperCase() || '?';
 
   // Lock body scroll when drawer is open on mobile
@@ -122,7 +118,7 @@ export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: Si
         </nav>
 
         {/* Brandee avatar — desktop only, fills remaining vertical space */}
-        <div className="hidden lg:flex flex-1 min-h-0 relative overflow-hidden mx-3 mb-3 rounded-xl bg-base/30">
+        <div className="hidden lg:flex flex-1 min-h-0 relative overflow-hidden mx-3 mb-3 rounded-xl bg-base/30 items-center justify-center">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -130,7 +126,7 @@ export function Sidebar({ isOpen, onClose, agentState, userName, onSignOut }: Si
                 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
             }}
           />
-          <Avatar state={agentState} compact />
+          <Brandee state={brandeeState} size={390} />
         </div>
 
         {/* User profile + sign out */}

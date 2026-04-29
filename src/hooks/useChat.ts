@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, startTransition } from 'react';
-import type { AgentState, Message } from '@/types';
+import type { BrandeeState, Message } from '@/types';
 
 const STORAGE_KEY = 'brandee-messages';
 const TYPING_WORD_DELAY_MS = 38;
@@ -30,16 +30,16 @@ function persistMessages(messages: Message[]) {
 
 interface UseChatOptions {
   userName?: string;
+  /** Called by the chat layer to drive Brandee's state machine. */
+  setBrandeeState?: (state: BrandeeState) => void;
 }
 
-export function useChat({ userName }: UseChatOptions = {}) {
+export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Ref so sendMessage always reads the latest messages without being listed
-  // as a reactive dependency — avoids re-creating the handler on every update.
   const messagesRef = useRef(messages);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,8 +48,6 @@ export function useChat({ userName }: UseChatOptions = {}) {
   }, [messages]);
 
   // Hydrate from localStorage once on mount.
-  // startTransition marks this as a non-urgent update so React doesn't treat it
-  // as a synchronous setState call inside an effect body.
   useEffect(() => {
     const stored = loadMessages();
     if (stored.length > 0) startTransition(() => setMessages(stored));
@@ -66,17 +64,6 @@ export function useChat({ userName }: UseChatOptions = {}) {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
   }, []);
-
-  const agentState: AgentState = isThinking
-    ? 'thinking'
-    : isSpeaking
-      ? 'speaking'
-      : inputValue.trim()
-        ? 'listening'
-        : 'idle';
-
-  // React Compiler (enabled in next.config.ts) memoizes functions automatically —
-  // useCallback wrappers are omitted intentionally.
 
   function simulateTyping(fullText: string, messageId: string, onDone: () => void) {
     const words = fullText.split(' ');
@@ -108,6 +95,7 @@ export function useChat({ userName }: UseChatOptions = {}) {
     setMessages(history);
     setInputValue('');
     setIsThinking(true);
+    setBrandeeState?.('thinking');
 
     try {
       const apiMessages = history.map(({ role, content: c }) => ({ role, content: c }));
@@ -123,19 +111,34 @@ export function useChat({ userName }: UseChatOptions = {}) {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const { reply } = (await res.json()) as { reply: string };
+      const { reply, cue } = (await res.json()) as {
+        reply: string;
+        cue: 'celebrate' | 'confused' | null;
+      };
       const assistantId = uid();
 
       setIsThinking(false);
+
+      // Cue overrides the speaking visual: celebrate / confused take priority.
+      if (cue === 'celebrate') setBrandeeState?.('celebrating');
+      else if (cue === 'confused') setBrandeeState?.('confused');
+      else setBrandeeState?.('speaking');
+
       setMessages((prev) => [
         ...prev,
         { id: assistantId, role: 'assistant', content: '', timestamp: Date.now() },
       ]);
       setIsSpeaking(true);
 
-      simulateTyping(reply, assistantId, () => setIsSpeaking(false));
+      simulateTyping(reply, assistantId, () => {
+        setIsSpeaking(false);
+        // Only return to idle if no cue was active — celebrate/confused
+        // states auto-transition out on their own timers from the state hook.
+        if (cue === null) setBrandeeState?.('idle');
+      });
     } catch {
       setIsThinking(false);
+      setBrandeeState?.('confused');
       setMessages((prev) => [
         ...prev,
         {
@@ -164,7 +167,6 @@ export function useChat({ userName }: UseChatOptions = {}) {
     messages,
     inputValue,
     setInputValue,
-    agentState,
     isThinking,
     isSpeaking,
     sendMessage,

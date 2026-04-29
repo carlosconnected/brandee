@@ -25,12 +25,37 @@ describe('POST /api/chat', () => {
     });
   });
 
-  it('returns a reply for a valid request', async () => {
+  it('returns a reply with null cue for a valid request', async () => {
     const { POST } = await import('./route');
     const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'hi' }] }));
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json.reply).toBe('Hello from Brandee!');
+    expect(json.cue).toBeNull();
+  });
+
+  it('parses [CELEBRATE] cue and strips the tag from the reply', async () => {
+    mockCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '[CELEBRATE] Way to go!' } }],
+    });
+    const { POST } = await import('./route');
+    const res = await POST(makeRequest({ messages: [{ role: 'user', content: 'I passed!' }] }));
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.cue).toBe('celebrate');
+    expect(json.reply).toBe('Way to go!');
+  });
+
+  it('parses [CONFUSED] cue and strips the tag from the reply', async () => {
+    mockCreate.mockResolvedValueOnce({
+      choices: [{ message: { content: '[CONFUSED] Could you rephrase that?' } }],
+    });
+    const { POST } = await import('./route');
+    const res = await POST(makeRequest({ messages: [{ role: 'user', content: '???' }] }));
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.cue).toBe('confused');
+    expect(json.reply).toBe('Could you rephrase that?');
   });
 
   it('returns 400 for an empty messages array', async () => {

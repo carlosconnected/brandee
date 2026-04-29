@@ -1,6 +1,6 @@
 'use client';
 
-import type { Message } from '@/types';
+import type { BrandeeState, Message } from '@/types';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 
@@ -13,6 +13,8 @@ interface ChatPanelProps {
   isThinking: boolean;
   isSpeaking: boolean;
   userName: string;
+  onActivity?: () => void;
+  setBrandeeState?: (state: BrandeeState) => void;
 }
 
 export function ChatPanel({
@@ -24,6 +26,8 @@ export function ChatPanel({
   isThinking,
   isSpeaking,
   userName,
+  onActivity,
+  setBrandeeState,
 }: ChatPanelProps) {
   const isDisabled = isThinking || isSpeaking;
 
@@ -81,6 +85,8 @@ export function ChatPanel({
           onChange={onInputChange}
           onSend={onSend}
           disabled={isDisabled}
+          onActivity={onActivity}
+          setBrandeeState={setBrandeeState}
         />
         <p className="text-center text-[10px] text-dim pb-2 select-none">
           Brandee can make mistakes. Please verify important information.
