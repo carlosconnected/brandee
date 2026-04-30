@@ -5,15 +5,20 @@ import type { BrandeeState } from '@/types';
 import { MICRO_BEHAVIORS, TIMINGS, type MicroBehavior } from './constants';
 
 /**
- * While `state === 'idle'`, randomly fires a micro-behavior every
- * 8–15 seconds. Returns the active behavior name (or null when nothing
- * is currently playing) so BrandeeImage can apply the matching CSS class.
+ * While `state === 'idle'` AND no transition frame is showing, randomly fires
+ * a micro-behavior every 8–15 seconds. Returns the active behavior name (or
+ * null when nothing is playing) so BrandeeImage can apply the matching CSS
+ * class. Pausing during transitions prevents the behaviors from conflicting
+ * visually with the transition pose swap.
  */
-export function useIdleBehavior(state: BrandeeState): MicroBehavior | null {
+export function useIdleBehavior(
+  state: BrandeeState,
+  transitionFrame: string | null
+): MicroBehavior | null {
   const [behavior, setBehavior] = useState<MicroBehavior | null>(null);
 
   useEffect(() => {
-    if (state !== 'idle') {
+    if (state !== 'idle' || transitionFrame !== null) {
       setBehavior(null);
       return;
     }
@@ -46,7 +51,7 @@ export function useIdleBehavior(state: BrandeeState): MicroBehavior | null {
       if (clearTimer) clearTimeout(clearTimer);
       setBehavior(null);
     };
-  }, [state]);
+  }, [state, transitionFrame]);
 
   return behavior;
 }

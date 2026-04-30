@@ -26,6 +26,7 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   brandeeState: BrandeeState;
+  brandeeTransitionFrame: string | null;
   userName: string;
   onSignOut: () => void;
 }
@@ -43,7 +44,14 @@ const NAV_ITEMS: NavItem[] = [
 
 const ACTIVE_LABEL = 'Dashboard';
 
-export function Sidebar({ isOpen, onClose, brandeeState, userName, onSignOut }: SidebarProps) {
+export function Sidebar({
+  isOpen,
+  onClose,
+  brandeeState,
+  brandeeTransitionFrame,
+  userName,
+  onSignOut,
+}: SidebarProps) {
   const initial = userName.trim().charAt(0).toUpperCase() || '?';
 
   // Lock body scroll when drawer is open on mobile
@@ -126,7 +134,7 @@ export function Sidebar({ isOpen, onClose, brandeeState, userName, onSignOut }: 
                 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
             }}
           />
-          <Brandee state={brandeeState} size={390} />
+          <Brandee state={brandeeState} transitionFrame={brandeeTransitionFrame} size={390} />
         </div>
 
         {/* User profile + sign out */}

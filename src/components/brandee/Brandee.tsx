@@ -9,6 +9,8 @@ interface BrandeeProps {
   state: BrandeeState;
   size?: number;
   showStateLabel?: boolean;
+  /** Transition frame currently overlaying the primary state image. */
+  transitionFrame?: string | null;
 }
 
 const STATE_LABELS: Record<BrandeeState, string> = {
@@ -30,7 +32,12 @@ const STATE_LABELS: Record<BrandeeState, string> = {
  *
  * Preloads all 10 frame images on mount to prevent flash on state change.
  */
-export function Brandee({ state, size = 180, showStateLabel = false }: BrandeeProps) {
+export function Brandee({
+  state,
+  size = 180,
+  showStateLabel = false,
+  transitionFrame = null,
+}: BrandeeProps) {
   useEffect(() => {
     // Imperatively warm the browser cache. Cheap, runs once.
     for (const frame of getAllImagePaths()) {
@@ -41,7 +48,7 @@ export function Brandee({ state, size = 180, showStateLabel = false }: BrandeePr
 
   return (
     <div className="relative inline-flex flex-col items-center justify-center">
-      <BrandeeImage state={state} size={size} />
+      <BrandeeImage state={state} size={size} transitionFrame={transitionFrame} />
       {showStateLabel && (
         <span className="absolute bottom-2 left-2 text-[10px] font-medium text-muted bg-base/80 backdrop-blur-sm border border-divider rounded-full px-2.5 py-1 leading-none select-none">
           {STATE_LABELS[state]}

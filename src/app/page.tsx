@@ -24,7 +24,12 @@ export default function Home() {
 
 function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { state: brandeeState, setState: setBrandeeState, reportActivity } = useBrandeeState();
+  const {
+    state: brandeeState,
+    transitionFrame: brandeeTransitionFrame,
+    setState: setBrandeeState,
+    reportActivity,
+  } = useBrandeeState();
 
   const {
     messages,
@@ -53,6 +58,7 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         brandeeState={brandeeState}
+        brandeeTransitionFrame={brandeeTransitionFrame}
         userName={userName}
         onSignOut={handleSignOut}
       />
@@ -76,7 +82,7 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
               'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
           }}
         />
-        <Brandee state={brandeeState} size={130} />
+        <Brandee state={brandeeState} transitionFrame={brandeeTransitionFrame} size={130} />
       </aside>
 
       {/* ── CHAT CARD ── fills remaining space (chat is now the only main panel on desktop) */}

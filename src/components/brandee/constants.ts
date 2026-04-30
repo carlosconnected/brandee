@@ -16,34 +16,64 @@ export const STATE_TO_FRAMES: Record<BrandeeState, string[]> = {
   confused:    ['confused.png'],
 };
 
+/**
+ * Single-frame transitions between states. The intermediate pose is held for
+ * TIMINGS.singleTransitionHold ms, then we cross-fade into the new state.
+ * Keys are `${from}->${to}`.
+ */
+export const TRANSITIONS: Record<string, string> = {
+  'idle->listening':      'idle-to-listening.png',
+  'listening->idle':      'idle-to-listening.png', // reuse the same intermediate pose
+  'listening->thinking':  'listening-to-thinking.png',
+  'thinking->speaking':   'thinking-to-speaking.png',
+  'idle->bored':          'idle-to-bored.png',
+  'bored->sleeping':      'bored-to-sleeping.png',
+  'bored->listening':     'bored-to-listening.png',
+};
+
+/**
+ * Multi-frame transition sequences for cinematic moments — each frame is held
+ * for its `hold` ms before the next, and the final state is set after the
+ * last frame finishes.
+ */
+export const TRANSITION_SEQUENCES: Record<string, { frame: string; hold: number }[]> = {
+  'sleeping->listening': [
+    { frame: 'waking-up.png',           hold: 400 },
+    { frame: 'bored-to-listening.png',  hold: 250 },
+  ],
+};
+
 export function getFrames(state: BrandeeState): string[] {
   return STATE_TO_FRAMES[state];
 }
 
-/** All frames flattened — used for image preloading on mount. */
+/** All frames + transition frames + sequence frames, deduped — used for image preloading. */
 export function getAllImagePaths(): string[] {
-  return Object.values(STATE_TO_FRAMES).flat();
+  const stateFrames = Object.values(STATE_TO_FRAMES).flat();
+  const single      = Object.values(TRANSITIONS);
+  const seq         = Object.values(TRANSITION_SEQUENCES).flat().map((s) => s.frame);
+  return Array.from(new Set([...stateFrames, ...single, ...seq]));
 }
 
 export const BRANDEE_IMAGE_PREFIX = '/brandee';
 
-/** Resolve a frame filename to a public URL. */
 export function frameUrl(frame: string): string {
   return `${BRANDEE_IMAGE_PREFIX}/${frame}`;
 }
 
 export const TIMINGS = {
-  greetingDuration:     3000,
-  greetingFrameSwap:    250,
-  idleToBored:          45_000,
-  boredToSleeping:      45_000, // bored → sleeping (45s after entering bored = 90s total)
-  microBehaviorMin:     8000,
-  microBehaviorMax:     15_000,
-  celebratingDuration:  3000,
-  confusedDuration:     3000,
-  speakingMinDuration:  2000,
-  wakeUpBounceDuration: 300,
-  listeningInactivity:  2000, // input has content but no keystrokes for 2s → idle
+  greetingDuration:      3000,
+  greetingFrameSwap:     250,
+  idleToBored:           45_000,
+  boredToSleeping:       45_000, // 45s after entering bored = 90s total
+  microBehaviorMin:      8000,
+  microBehaviorMax:      15_000,
+  celebratingDuration:   3000,
+  confusedDuration:      3000,
+  speakingMinDuration:   2000,
+  singleTransitionHold:  200,
+  crossFadeDuration:     180,
+  listeningInactivity:   2000,
 } as const;
 
 export type MicroBehavior =
@@ -69,3 +99,7 @@ export const RESTING_STATES: ReadonlySet<BrandeeState> = new Set<BrandeeState>([
   'bored',
   'sleeping',
 ]);
+
+export function transitionKey(from: BrandeeState, to: BrandeeState): string {
+  return `${from}->${to}`;
+}
