@@ -1,19 +1,39 @@
 import type { BrandeeState } from '@/types';
 
 /**
- * Each Brandee state maps to an array of frames. Single-frame states use a 1-element array.
- * The greeting state has 2 frames that alternate every TIMINGS.greetingFrameSwap ms.
+ * A single frame entry inside a state. `hold` is how long this frame is shown
+ * before advancing to the next one in the array (looping). For single-frame
+ * states the hold is irrelevant — it's still required for type uniformity.
  */
-export const STATE_TO_FRAMES: Record<BrandeeState, string[]> = {
-  greeting:    ['greeting-1.png', 'greeting-2.png'],
-  idle:        ['idle.png'],
-  bored:       ['bored.png'],
-  sleeping:    ['sleeping.png'],
-  listening:   ['listening.png'],
-  thinking:    ['thinking.png'],
-  speaking:    ['speaking.png'],
-  celebrating: ['celebrating.png'],
-  confused:    ['confused.png'],
+export interface FrameEntry {
+  frame: string;
+  hold: number;
+}
+
+/**
+ * Each Brandee state maps to one or more frames that loop in order.
+ *
+ *   - Single-frame states (e.g. `bored`, `thinking`) are just a 1-element array.
+ *   - `greeting` alternates between two waving frames at 250ms each.
+ *   - `idle` shows the eyes-open frame for 5.5s, then the eyes-closed frame for
+ *     0.5s — a natural-looking blink every 6 seconds.
+ */
+export const STATE_TO_FRAMES: Record<BrandeeState, FrameEntry[]> = {
+  greeting: [
+    { frame: 'greeting-1.png', hold: 250 },
+    { frame: 'greeting-2.png', hold: 250 },
+  ],
+  idle: [
+    { frame: 'idle-1.png', hold: 5500 },
+    { frame: 'idle-2.png', hold: 500 },
+  ],
+  bored:       [{ frame: 'bored.png',       hold: 0 }],
+  sleeping:    [{ frame: 'sleeping.png',    hold: 0 }],
+  listening:   [{ frame: 'listening.png',   hold: 0 }],
+  thinking:    [{ frame: 'thinking.png',    hold: 0 }],
+  speaking:    [{ frame: 'speaking.png',    hold: 0 }],
+  celebrating: [{ frame: 'celebrating.png', hold: 0 }],
+  confused:    [{ frame: 'confused.png',    hold: 0 }],
 };
 
 /**
@@ -43,13 +63,13 @@ export const TRANSITION_SEQUENCES: Record<string, { frame: string; hold: number 
   ],
 };
 
-export function getFrames(state: BrandeeState): string[] {
+export function getFrames(state: BrandeeState): FrameEntry[] {
   return STATE_TO_FRAMES[state];
 }
 
 /** All frames + transition frames + sequence frames, deduped — used for image preloading. */
 export function getAllImagePaths(): string[] {
-  const stateFrames = Object.values(STATE_TO_FRAMES).flat();
+  const stateFrames = Object.values(STATE_TO_FRAMES).flat().map((f) => f.frame);
   const single      = Object.values(TRANSITIONS);
   const seq         = Object.values(TRANSITION_SEQUENCES).flat().map((s) => s.frame);
   return Array.from(new Set([...stateFrames, ...single, ...seq]));
@@ -63,7 +83,6 @@ export function frameUrl(frame: string): string {
 
 export const TIMINGS = {
   greetingDuration:      3000,
-  greetingFrameSwap:     250,
   idleToBored:           45_000,
   boredToSleeping:       45_000, // 45s after entering bored = 90s total
   microBehaviorMin:      8000,
@@ -76,8 +95,9 @@ export const TIMINGS = {
   listeningInactivity:   2000,
 } as const;
 
+// Image-based blink replaces the CSS scaleY blink for idle, so it's
+// removed from the micro-behavior list to avoid double-blinking.
 export type MicroBehavior =
-  | 'blink'
   | 'lookLeft'
   | 'lookRight'
   | 'tinyBounce'
@@ -85,7 +105,6 @@ export type MicroBehavior =
   | 'wiggle';
 
 export const MICRO_BEHAVIORS: { name: MicroBehavior; duration: number }[] = [
-  { name: 'blink',      duration: 200 },
   { name: 'lookLeft',   duration: 1500 },
   { name: 'lookRight',  duration: 1500 },
   { name: 'tinyBounce', duration: 600 },

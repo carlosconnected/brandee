@@ -29,17 +29,32 @@ export function BrandeeImage({ state, size, transitionFrame = null }: BrandeeIma
   const microBehavior = useIdleBehavior(state, transitionFrame);
   const [frameIndex, setFrameIndex] = useState(0);
 
-  // Frame swapping for multi-frame states (greeting). No cross-fade between
-  // frames within a state — only between distinct images.
+  // Frame swapping for multi-frame states. Each frame has its own `hold` so
+  // states can express different rhythms — e.g. greeting alternates every
+  // 250ms (a wave) while idle holds eyes-open 5500ms then eyes-closed 500ms
+  // (a natural blink).
   useEffect(() => {
     setFrameIndex(0);
     if (frames.length <= 1) return;
 
-    const id = setInterval(() => {
-      setFrameIndex((i) => (i + 1) % frames.length);
-    }, TIMINGS.greetingFrameSwap);
-    return () => clearInterval(id);
-  }, [state, frames.length]);
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let i = 0;
+
+    function tick() {
+      if (cancelled) return;
+      i = (i + 1) % frames.length;
+      setFrameIndex(i);
+      timer = setTimeout(tick, frames[i]!.hold);
+    }
+
+    timer = setTimeout(tick, frames[0]!.hold);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [state, frames]);
 
   // Wake-up bounce — fires once when transitioning out of `sleeping`
   const prevStateRef = useRef<BrandeeState>(state);
@@ -55,9 +70,11 @@ export function BrandeeImage({ state, size, transitionFrame = null }: BrandeeIma
   }, [state]);
 
   const isResting    = RESTING_STATES.has(state) && transitionFrame === null;
-  const stateFrame   = frames[frameIndex] ?? frames[0]!;
+  const stateFrame   = frames[frameIndex]?.frame ?? frames[0]!.frame;
   const currentFrame = transitionFrame ?? stateFrame;
-  // Cross-fade key: changes whenever the visible image changes.
+  // Cross-fade key — only changes on state changes or transition frames.
+  // In-state frame swaps (greeting wave, idle blink) update the Image src
+  // directly without triggering AnimatePresence, so they snap instantly.
   const presenceKey  = transitionFrame ?? state;
 
   return (
