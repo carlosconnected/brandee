@@ -24,7 +24,7 @@ export const STATE_TO_FRAMES: Record<BrandeeState, FrameEntry[]> = {
     { frame: "greeting-2.png", hold: 250 },
   ],
   idle: [
-    { frame: "idle-1.png", hold: 4500 },
+    { frame: "idle-1.png", hold: 4000 },
     { frame: "idle-2.png", hold: 500 },
   ],
   bored: [{ frame: "bored.png", hold: 0 }],
@@ -49,6 +49,7 @@ export const TRANSITIONS: Record<string, string> = {
   "listening->idle": "idle-to-listening.png", // reuse the same intermediate pose
   "listening->thinking": "listening-to-thinking.png",
   "thinking->speaking": "thinking-to-speaking.png",
+  "thinking->celebrating": "thinking-to-celebrating.png",
   "idle->bored": "idle-to-bored.png",
   "bored->sleeping": "bored-to-sleeping.png",
   "bored->listening": "bored-to-listening.png",
@@ -100,8 +101,8 @@ export const TIMINGS = {
   celebratingDuration: 3000,
   confusedDuration: 3000,
   speakingMinDuration: 2000,
-  singleTransitionHold: 200,
-  crossFadeDuration: 180,
+  singleTransitionHold: 600,
+  crossFadeDuration: 500,
   listeningInactivity: 2000,
 } as const;
 
