@@ -41,6 +41,7 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
     isSpeaking,
     sendMessage,
     clearChat,
+    trimOldestHalf,
     conversationError,
   } = useChat({ userName, setBrandeeState });
 
@@ -105,6 +106,7 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
           onInputChange={setInputValue}
           onSend={sendMessage}
           onClear={clearChat}
+          onTrimHalf={trimOldestHalf}
           isThinking={isThinking}
           isSpeaking={isSpeaking}
           userName={userName}

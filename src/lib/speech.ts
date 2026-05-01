@@ -61,13 +61,25 @@ interface RecognitionHandle {
 }
 
 interface StartRecognitionOptions {
-  /** Fired with the latest transcript. `isFinal` is true on the last segment. */
+  /** Fired with the latest transcript. `isFinal` is true when nothing is interim. */
   onResult: (transcript: string, isFinal: boolean) => void;
   /** Fired once when the recognition session ends (manually or automatically). */
   onEnd?: () => void;
   /** Fired on errors (denied permission, no speech detected, network, etc.). */
   onError?: (errorCode: string) => void;
   lang?: string;
+  /**
+   * If true, recognition keeps listening across pauses instead of ending after
+   * the browser's default silence threshold (~1s). Pair with `silenceTimeout`
+   * to define when to auto-stop.
+   */
+  continuous?: boolean;
+  /**
+   * Only honoured when `continuous: true`. Auto-stops the recognition session
+   * after this many ms with no new speech. Lets users pause naturally
+   * mid-sentence without being cut off.
+   */
+  silenceTimeout?: number;
 }
 
 export function recognitionAvailable(): boolean {
@@ -93,20 +105,58 @@ export function startRecognition(opts: StartRecognitionOptions): RecognitionHand
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognition: any = new Ctor();
-  recognition.continuous     = false;        // one phrase per session
+  recognition.continuous     = opts.continuous ?? false;
   recognition.interimResults = true;         // partial transcripts as user speaks
   recognition.lang           = opts.lang ?? 'en-US';
 
+  let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function clearSilenceTimer() {
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+  }
+
+  function armSilenceTimer() {
+    if (!opts.continuous || !opts.silenceTimeout) return;
+    clearSilenceTimer();
+    silenceTimer = setTimeout(() => {
+      try {
+        recognition.stop();
+      } catch {
+        /* ignore */
+      }
+    }, opts.silenceTimeout);
+  }
+
+  // Iterate ALL results (not just the latest) so that in continuous mode we
+  // produce the full accumulated transcript on every event. In non-continuous
+  // mode there's only one result, so the behaviour is identical to before.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   recognition.onresult = (event: any) => {
-    const result      = event.results[event.results.length - 1];
-    const transcript  = result[0].transcript as string;
-    opts.onResult(transcript, Boolean(result.isFinal));
+    let combined   = '';
+    let hasInterim = false;
+    for (let i = 0; i < event.results.length; i++) {
+      const result     = event.results[i];
+      const transcript = result[0].transcript as string;
+      combined += transcript;
+      if (!result.isFinal) hasInterim = true;
+    }
+    opts.onResult(combined.trim(), !hasInterim);
+    armSilenceTimer();
   };
 
-  recognition.onend = () => opts.onEnd?.();
+  recognition.onstart = () => armSilenceTimer();
+  recognition.onend   = () => {
+    clearSilenceTimer();
+    opts.onEnd?.();
+  };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  recognition.onerror = (e: any) => opts.onError?.(e?.error ?? 'unknown');
+  recognition.onerror = (e: any) => {
+    clearSilenceTimer();
+    opts.onError?.(e?.error ?? 'unknown');
+  };
 
   try {
     recognition.start();
@@ -116,6 +166,7 @@ export function startRecognition(opts: StartRecognitionOptions): RecognitionHand
 
   return {
     stop: () => {
+      clearSilenceTimer();
       try {
         recognition.stop();
       } catch {

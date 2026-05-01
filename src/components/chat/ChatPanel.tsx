@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import type { BrandeeState, Message } from '@/types';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
+import { ConversationFullModal } from './ConversationFullModal';
 
 interface ChatPanelProps {
   messages: Message[];
@@ -10,6 +12,8 @@ interface ChatPanelProps {
   onInputChange: (v: string) => void;
   onSend: (v: string, viaVoice: boolean) => void;
   onClear: () => void;
+  /** Drops the older half of messages, keeps the recent half. */
+  onTrimHalf: () => void;
   isThinking: boolean;
   isSpeaking: boolean;
   userName: string;
@@ -24,6 +28,7 @@ export function ChatPanel({
   onInputChange,
   onSend,
   onClear,
+  onTrimHalf,
   isThinking,
   isSpeaking,
   userName,
@@ -31,6 +36,7 @@ export function ChatPanel({
   setBrandeeState,
   conversationError,
 }: ChatPanelProps) {
+  const [showFullModal, setShowFullModal] = useState(false);
   const isDisabled = isThinking || isSpeaking;
 
   return (
@@ -90,11 +96,19 @@ export function ChatPanel({
           onActivity={onActivity}
           setBrandeeState={setBrandeeState}
           conversationError={conversationError}
+          onConversationFullClick={() => setShowFullModal(true)}
         />
         <p className="text-center text-[10px] text-dim pb-2 select-none">
           Brandee can make mistakes. Please verify important information.
         </p>
       </div>
+
+      <ConversationFullModal
+        open={showFullModal}
+        onClose={() => setShowFullModal(false)}
+        onClearAll={onClear}
+        onTrimHalf={onTrimHalf}
+      />
     </div>
   );
 }

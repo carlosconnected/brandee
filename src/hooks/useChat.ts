@@ -224,10 +224,26 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
 
   const conversationError: string | null =
     messages.length >= MAX_MESSAGES
-      ? `You've reached the limit of ${MAX_MESSAGES} messages in this chat. Click Clear to start a fresh conversation.`
+      ? `This chat has reached the ${MAX_MESSAGES}-message limit.`
       : projectedTotal > MAX_TOTAL_CHARS
-        ? 'This conversation has gotten very long. Click Clear to start a fresh chat with Brandee.'
+        ? 'This conversation has gotten very long.'
         : null;
+
+  /**
+   * Drops the older half of messages, keeping the most recent half. Lets the
+   * user stay under the conversation cap without losing the latest context.
+   * If there's only one message, no-op (nothing meaningful to trim).
+   */
+  function trimOldestHalf() {
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    cancelSpeech();
+    setMessages((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.slice(Math.floor(prev.length / 2));
+    });
+    setIsThinking(false);
+    setIsSpeaking(false);
+  }
 
   function clearChat() {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -250,6 +266,7 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
     isSpeaking,
     sendMessage,
     clearChat,
+    trimOldestHalf,
     conversationError,
   };
 }
