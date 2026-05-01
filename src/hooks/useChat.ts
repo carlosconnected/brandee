@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, startTransition } from 'react';
 import type { BrandeeState, Message } from '@/types';
+import { cancelSpeech, speakText } from '@/lib/speech';
 
 const STORAGE_KEY = 'brandee-messages';
 // Word-by-word typing cadence. Bumped from 38 to 50ms (~30% slower) for a
@@ -94,6 +95,9 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
     const text = content.trim();
     if (!text || isThinking || isSpeaking) return;
 
+    // Cancel any speech still rolling from a previous reply.
+    cancelSpeech();
+
     const userMsg: Message = { id: uid(), role: 'user', content: text, timestamp: Date.now() };
     const history = [...messagesRef.current, userMsg];
 
@@ -135,15 +139,37 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
       ]);
       setIsSpeaking(true);
 
+      // Visual typing and audio TTS run in parallel. The speaking state ends
+      // only when BOTH have finished — whichever takes longer governs.
+      // Celebrate/confused cues auto-return to idle on their own timers, so
+      // we don't push them back to idle from here.
+      let typingDone = false;
+      let speechDone = false;
+      const tryFinishSpeaking = () => {
+        if (!typingDone || !speechDone) return;
+        setIsSpeaking(false);
+        if (cue === null) setBrandeeState?.('idle');
+      };
+
       simulateTyping(reply, assistantId, () => {
-        // Hold the speaking visual for one more beat after the last word is
-        // typed, then unwind. Celebrate/confused cues auto-return to idle on
-        // their own timers from the state hook, so we don't override them.
+        // Tail keeps the visual a beat longer after the last word is typed.
         typingTimerRef.current = setTimeout(() => {
-          setIsSpeaking(false);
-          if (cue === null) setBrandeeState?.('idle');
+          typingDone = true;
+          tryFinishSpeaking();
         }, SPEAKING_TAIL_MS);
       });
+
+      if (cue === null) {
+        // Only voice the regular `speaking` state — celebrate/confused are
+        // brief 3s visual reactions. Their state auto-returns to idle on
+        // its own timer; we don't want TTS still talking past that.
+        speakText(reply, () => {
+          speechDone = true;
+          tryFinishSpeaking();
+        });
+      } else {
+        speechDone = true;
+      }
     } catch {
       setIsThinking(false);
       setBrandeeState?.('confused');
@@ -161,6 +187,7 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
 
   function clearChat() {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    cancelSpeech();
     setMessages([]);
     setIsThinking(false);
     setIsSpeaking(false);

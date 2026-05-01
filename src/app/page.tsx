@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useUser } from '@/hooks/useUser';
+import { useGreetingSpeech } from '@/hooks/useGreetingSpeech';
 import { useBrandeeState } from '@/components/brandee/useBrandeeState';
 import { clearGreetingHistory } from '@/components/brandee/greetingHistory';
+import { cancelSpeech } from '@/lib/speech';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { BrandeeWithDesk } from '@/components/brandee/BrandeeWithDesk';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -41,7 +43,12 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
     clearChat,
   } = useChat({ userName, setBrandeeState });
 
+  // Speak the greeting out loud on the first sign-in of the day, in sync
+  // with the visual `greeting` state.
+  useGreetingSpeech({ state: brandeeState, userName });
+
   function handleSignOut() {
+    cancelSpeech();
     clearChat();
     clearGreetingHistory();
     setSidebarOpen(false);

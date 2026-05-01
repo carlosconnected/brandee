@@ -100,7 +100,9 @@ export function frameUrl(frame: string): string {
 }
 
 export const TIMINGS = {
-  greetingDuration: 3000,
+  // Bumped so the visual wave outlasts the spoken greeting (~3.5s for a
+  // typical name). Avoids seeing idle while the voice is still talking.
+  greetingDuration: 5500,
   idleToBored: 45_000,
   boredToSleeping: 45_000, // 45s after entering bored = 90s total
   microBehaviorMin: 8000,
