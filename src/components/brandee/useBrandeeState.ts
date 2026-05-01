@@ -5,6 +5,20 @@ import type { BrandeeState } from '@/types';
 import { TIMINGS, TRANSITIONS, TRANSITION_SEQUENCES, transitionKey } from './constants';
 import { markGreetedToday, shouldGreet } from './greetingHistory';
 
+interface UseBrandeeStateOptions {
+  /**
+   * When true, all timer-driven transitions are disabled:
+   *   - greeting auto-play (and `markGreetedToday` skip)
+   *   - idle escalation (idle → bored → sleeping)
+   *   - auto-return from celebrating / confused
+   *
+   * `setState` and `reportActivity` still work as normal — only the
+   * automatic timers are suppressed. Useful for the playground where
+   * states need to stay put while you tune them.
+   */
+  disableAutoTransitions?: boolean;
+}
+
 interface UseBrandeeStateReturn {
   state: BrandeeState;
   transitionFrame: string | null;
@@ -54,12 +68,18 @@ function reducer(s: ReducerState, a: ReducerAction): ReducerState {
  * `reportActivity()` resets idle-escalation timers and wakes Brandee from
  * bored/sleeping. Both `setState` and `reportActivity` are stable references.
  */
-export function useBrandeeState(): UseBrandeeStateReturn {
+export function useBrandeeState(
+  options: UseBrandeeStateOptions = {}
+): UseBrandeeStateReturn {
+  const { disableAutoTransitions = false } = options;
+
   const [s, dispatch] = useReducer(
     reducer,
     null,
     (): ReducerState => ({
-      current: shouldGreet() ? 'greeting' : 'idle',
+      // When auto-transitions are off (playground), always start at `idle`
+      // so we don't get stuck in `greeting` with no timer to leave it.
+      current: !disableAutoTransitions && shouldGreet() ? 'greeting' : 'idle',
       activityTick: 0,
     })
   );
@@ -140,15 +160,17 @@ export function useBrandeeState(): UseBrandeeStateReturn {
   // transition back to idle. No ref-guard — those don't survive React Strict
   // Mode's dev double-effect; cleanup naturally cancels prior timers.
   useEffect(() => {
+    if (disableAutoTransitions) return;
     if (s.current !== 'greeting') return;
     markGreetedToday();
     const t = setTimeout(() => setState('idle'), TIMINGS.greetingDuration);
     return () => clearTimeout(t);
-  }, [s.current, setState]);
+  }, [s.current, setState, disableAutoTransitions]);
 
   // ── Idle escalation: idle → bored → sleeping ──────────────────────────────
   // Activity tick included in deps so reportActivity() resets the timers.
   useEffect(() => {
+    if (disableAutoTransitions) return;
     if (s.current === 'idle') {
       const t = setTimeout(() => setState('bored'), TIMINGS.idleToBored);
       return () => clearTimeout(t);
@@ -157,10 +179,11 @@ export function useBrandeeState(): UseBrandeeStateReturn {
       const t = setTimeout(() => setState('sleeping'), TIMINGS.boredToSleeping);
       return () => clearTimeout(t);
     }
-  }, [s.current, s.activityTick, setState]);
+  }, [s.current, s.activityTick, setState, disableAutoTransitions]);
 
   // ── Auto-return to idle from timed states ─────────────────────────────────
   useEffect(() => {
+    if (disableAutoTransitions) return;
     if (s.current === 'celebrating') {
       const t = setTimeout(() => setState('idle'), TIMINGS.celebratingDuration);
       return () => clearTimeout(t);
@@ -169,7 +192,7 @@ export function useBrandeeState(): UseBrandeeStateReturn {
       const t = setTimeout(() => setState('idle'), TIMINGS.confusedDuration);
       return () => clearTimeout(t);
     }
-  }, [s.current, setState]);
+  }, [s.current, setState, disableAutoTransitions]);
 
   return { state: s.current, transitionFrame, setState, reportActivity };
 }
