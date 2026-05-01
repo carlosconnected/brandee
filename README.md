@@ -286,7 +286,11 @@ Package the experience as a native iOS and Android app for a smoother, faster ex
 
 Let users adjust the agent's tone — more formal, more casual, more concise — so the experience feels tailored to their preference.
 
-### 14. More Frequent Feedback Loops with the Team
+### 14. Expanded Automated Test Coverage
+
+The current test suite covers the critical layers — schema, API route, middleware, session tokens, and the chat input UI — but plenty of newer surface area is still untested. With more time I would add coverage for the Brandee state machine (transition timing, idle escalation, wake-up on activity, transition-frame sequencing), the voice layer (dictation flow, hands-free auto-send, the question-mark heuristic), the conversation-cap modal logic (trim-half vs. clear-all paths), and the TTS greeting latch. Each of these has clear inputs and outputs and would benefit from regression tests as the app keeps evolving.
+
+### 15. More Frequent Feedback Loops with the Team
 
 Most of this project was built heads-down against a tight deadline, which meant I was making product, design, and architectural calls on my own as I went. With more time I would have paused at several checkpoints — early concept, mid-build, and pre-polish — to share progress with the team and gather feedback on the direction. Even a single review session can catch assumptions I didn't realise I was making, surface ideas I wouldn't have thought of, and make sure the final result reflects the team's vision rather than just my interpretation of it.
 
