@@ -24,7 +24,7 @@ export const STATE_TO_FRAMES: Record<BrandeeState, FrameEntry[]> = {
     { frame: "greeting-2.png", hold: 250 },
   ],
   idle: [
-    { frame: "idle-1.png", hold: 4000 },
+    { frame: "idle-1.png", hold: 3000 },
     { frame: "idle-2.png", hold: 500 },
   ],
   bored: [{ frame: "bored.png", hold: 0 }],
