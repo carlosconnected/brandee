@@ -97,21 +97,47 @@ The server tracks how many messages each user sends per minute. If someone excee
 
 ### 4. The AI Call
 
-Once everything checks out, the app sends your conversation (up to the last 20 messages, capped at 16,000 characters) to a powerful AI model, along with a fixed set of instructions that define how it should behave.
+Once everything checks out, the app sends your conversation (up to the last 160 messages, capped at 80,000 characters) to a powerful AI model, along with a fixed set of instructions that define how it should behave. Older messages stay visible on screen and in your local history — only the request payload is trimmed, so the conversation never silently truncates from your point of view.
 
-**Why it matters:** Keeping a recent history lets the AI understand context — it knows what was said earlier in the conversation. The fixed instructions ensure the AI stays on-brand and on-topic, no matter what users ask.
+**Why it matters:** Keeping a recent history lets the AI understand context — it knows what was said earlier in the conversation. The fixed instructions ensure the AI stays on-brand and on-topic, no matter what users ask. Trimming server-side requests (without trimming the visible chat) keeps responses fast and predictable as the conversation grows.
 
-### 5. Typing Simulation
+### 5. Personality Cues
 
-Instead of the full reply appearing instantly, words appear one at a time at a natural reading pace (about 38ms per word).
+Brandee can react visually to what she's saying. Her system prompt allows the model to optionally prefix a reply with `[CELEBRATE]` (good news, accomplishments) or `[CONFUSED]` (genuine misunderstanding, errors). The server strips the tag before the reply ever reaches the screen and forwards a `cue` field to the client, which plays a short arms-up or head-tilt reaction on the avatar.
+
+**Why it matters:** It turns the avatar from a static decoration into an emotional participant in the conversation. The model decides when to react — there's no keyword matching or sentiment-classifier hack — so the celebration or confusion lands at exactly the moments where a real person would react that way.
+
+### 6. Typing Simulation
+
+Instead of the full reply appearing instantly, words appear one at a time at a natural reading pace (about 50ms per word).
 
 **Why it matters:** It feels more like talking to a person than reading a database dump. This small detail dramatically improves how trustworthy and pleasant the experience feels.
 
-### 6. Persistence
+### 7. Voice Greeting
 
-Your conversation is saved in the browser so that if you refresh the page or accidentally close the tab, your chat history is still there.
+The first time you sign in on any given day, Brandee waves and says "Hi {name}. How can I help you today?" out loud. A small `localStorage` latch makes sure this happens exactly once per day, even with React's Strict Mode running effects twice in development.
 
-**Why it matters:** Nobody wants to lose a conversation they just had. This makes the experience feel reliable and polished — like a real product, not a prototype.
+**Why it matters:** A spoken greeting on first sign-in immediately establishes that this is a voice-capable agent — not just a text chat with a face. Limiting it to once a day keeps the experience charming instead of repetitive.
+
+### 8. Dictation
+
+A microphone button next to the input lets you speak a single message instead of typing it. Your words appear live in the input box as you talk; when you stop, the transcript stays in the input so you can review and edit before sending. The reply is read out loud, since the message was composed by voice.
+
+**Why it matters:** Dictation removes friction on mobile, where typing is slow, and gives anyone who finds the keyboard tiring an equally first-class way to interact. Letting you review the transcript before sending avoids the "voice assistant misheard me and ran with it" frustration.
+
+### 9. Hands-Free Voice Mode
+
+A headphones button toggles a continuous voice mode: the mic listens, auto-sends after a 2-second silence, the reply plays through TTS, and the mic re-arms once the reply finishes — all without you touching the screen. Toggling the button off (or hitting the conversation cap) gracefully exits.
+
+Because speech recognition strips punctuation, a small heuristic restores question marks when an utterance opens with a wh-word or fronted auxiliary verb — so "what's the capital of Italy" arrives as "what's the capital of Italy?" rather than a flat statement.
+
+**Why it matters:** It turns Brandee into a true two-way voice conversation, not just a chat with optional voice features. The punctuation heuristic is a small touch but matters a lot — questions lose their meaning when read back as statements, and even modern speech APIs still don't add punctuation reliably.
+
+### 10. Persistence
+
+Your conversation is saved in the browser so that if you refresh the page or accidentally close the tab, your chat history is still there. When the conversation does eventually approach its cap, a modal offers two options: trim the older half (preserving your recent context) or clear the entire chat for a fresh start.
+
+**Why it matters:** Nobody wants to lose a conversation they just had. This makes the experience feel reliable and polished — like a real product, not a prototype. Giving the user a clean choice when they hit the limit, instead of just blocking them, respects how invested they may be in the current thread.
 
 ## How Animation States Are Handled
 
