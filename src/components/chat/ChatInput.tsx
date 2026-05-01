@@ -115,6 +115,18 @@ export function ChatInput({
     voiceModeRef.current = voiceMode;
   }, [voiceMode]);
 
+  // Same trick for conversationError — voice mode's onEnd callback fires
+  // outside React's render cycle, so it needs the latest value via a ref.
+  const conversationErrorRef = useRef(conversationError);
+  useEffect(() => {
+    conversationErrorRef.current = conversationError;
+  }, [conversationError]);
+
+  const onConversationFullClickRef = useRef(onConversationFullClick);
+  useEffect(() => {
+    onConversationFullClickRef.current = onConversationFullClick;
+  }, [onConversationFullClick]);
+
   const micSupported = recognitionAvailable();
 
   function micErrorMessage(code: string): string {
@@ -214,6 +226,13 @@ export function ChatInput({
         finalTranscriptRef.current = "";
 
         if (text) {
+          // Conversation is full — surface the modal instead of silently
+          // dropping the message in useChat's internal guard. Don't restart
+          // listening; the user has to resolve the modal first.
+          if (conversationErrorRef.current) {
+            onConversationFullClickRef.current?.();
+            return;
+          }
           // Auto-send. Brandee replies via TTS, then we'll restart via the
           // useEffect below once `disabled` flips back to false.
           onSend(text, true);
@@ -259,6 +278,12 @@ export function ChatInput({
       recognitionRef.current?.stop();
       cancelSpeech();
     } else {
+      // Entering voice mode while at the cap is pointless — the mic won't
+      // restart anyway. Pop the modal so the user can resolve it first.
+      if (conversationError) {
+        onConversationFullClick?.();
+        return;
+      }
       setVoiceMode(true);
       setMicError(null);
       // The useEffect below will start listening once it sees voiceMode=true.
@@ -273,12 +298,18 @@ export function ChatInput({
     if (!voiceMode) return;
     if (disabled) return;
     if (recognitionRef.current) return;
+    // Conversation is at the cap — surface the modal instead of silently
+    // staying mute. The user has to trim / clear before we can keep going.
+    if (conversationError) {
+      onConversationFullClick?.();
+      return;
+    }
 
     startVoiceListening();
     // We intentionally omit startVoiceListening from deps — it's recreated
     // every render but only depends on stable refs / state setters internally.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voiceMode, disabled]);
+  }, [voiceMode, disabled, conversationError]);
 
   // Stop any in-flight recognition when chat becomes busy (user manually
   // sent, OR auto-send fired) so the mic doesn't fight the reply.
@@ -289,8 +320,18 @@ export function ChatInput({
   }, [disabled]);
 
   // ── Send ────────────────────────────────────────────────────────────────
+  // The button is enabled whenever the user has something to send and the
+  // chat isn't busy. If the conversation has hit the cap, the click is
+  // routed to opening the "Conversation full" modal instead of fetching.
+  const hasContent      = value.trim().length > 0;
+  const canTriggerSend  = !disabled && hasContent && !overLimit;
+
   function performSend() {
-    if (!canSend) return;
+    if (!canTriggerSend) return;
+    if (conversationError) {
+      onConversationFullClick?.();
+      return;
+    }
     onSend(value, viaVoiceRef.current);
     viaVoiceRef.current = false;
     baseValueRef.current = "";
@@ -307,9 +348,6 @@ export function ChatInput({
     onActivity?.();
     onChange(e.target.value);
   }
-
-  const canSend =
-    !disabled && value.trim().length > 0 && !overLimit && !conversationError;
 
   return (
     <div className="flex flex-col gap-1 px-4 pb-4 pt-2">
@@ -378,7 +416,7 @@ export function ChatInput({
         <button
           type="button"
           onClick={performSend}
-          disabled={!canSend}
+          disabled={!canTriggerSend}
           aria-label="Send message"
           className="shrink-0 w-10 h-10 rounded-xl bg-brand hover:bg-brand-dark disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-colors duration-150"
         >
