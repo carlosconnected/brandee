@@ -115,16 +115,71 @@ Your conversation is saved in the browser so that if you refresh the page or acc
 
 ## How Animation States Are Handled
 
-The avatar has four states defined in `src/types/index.ts`:
+Brandee is a fully illustrated character composed of pre-rendered PNG frames, not an SVG with overlay indicators. There are nine distinct states, each with its own set of frames, and the character is composited onto a desk so she physically reacts to what's happening in the conversation (waking up, leaning forward, throwing arms up, etc.).
 
-| State       | When                            | Visual                                                      |
-| ----------- | ------------------------------- | ----------------------------------------------------------- |
-| `idle`      | No activity                     | Floating Z's above the avatar                               |
-| `listening` | User is typing                  | Sound-wave arcs on both sides of the head                   |
-| `thinking`  | Waiting for Groq response       | Speech bubble with three bouncing dots                      |
-| `speaking`  | Brandee is typing out her reply | Six lines fanning from the mouth corners, pulsing in purple |
+### The Nine States
 
-State is managed in `useChat.ts` and flows down as a single `state: AgentState` prop. The `Avatar` component passes it to `IndicatorLayer`, which uses Framer Motion's `AnimatePresence` to fade between indicator components as the state changes. Each indicator is a self-contained SVG overlay with its own looping Framer Motion animation — no global animation state or timers shared between them.
+Defined in `src/types/index.ts`:
+
+| State         | When                                                       | Visual                                                                                                          |
+| ------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `greeting`    | First sign-in of the day                                   | Two-frame waving animation; a TTS hello plays alongside it                                                      |
+| `idle`        | Default resting state                                      | Eyes-open + eyes-closed frames cycle to produce a natural blink every ~6s                                       |
+| `bored`       | ~45s with no activity                                      | Slumped pose, eyes elsewhere                                                                                    |
+| `sleeping`    | ~45s after entering `bored` (≈90s total idle)              | Head down on the desk, "Z" frames                                                                               |
+| `listening`   | User is typing or actively dictating                       | Leaning in, attentive pose                                                                                      |
+| `thinking`    | Waiting on the Groq response                               | Hand-on-chin pose                                                                                               |
+| `speaking`    | Brandee is typing out / TTS-ing her reply                  | Two-frame mouth animation                                                                                       |
+| `celebrating` | Cued by the LLM when the reply warrants it (e.g. praise)   | Arms-up two-frame loop; auto-returns to `idle` after 3s                                                         |
+| `confused`    | Cued by the LLM on confused replies, or on a network error | Tilted-head two-frame loop; auto-returns to `idle` after 3s                                                     |
+
+Frame data, hold times, and which states use multiple frames live in `src/components/brandee/constants.ts` (`STATE_TO_FRAMES`).
+
+### The State Machine — `useBrandeeState`
+
+A single `useReducer`-backed hook (`src/components/brandee/useBrandeeState.ts`) owns the entire state machine. It exposes a stable `setState(next)` and `reportActivity()` pair, and internally manages every timer-driven transition:
+
+- **Greeting auto-play** — `greeting → idle` after `TIMINGS.greetingDuration` (5.5s, long enough to outlast the spoken greeting)
+- **Idle escalation** — `idle → bored` after 45s of no activity, then `bored → sleeping` after another 45s
+- **Wake-up on activity** — any `reportActivity()` call (click, key press, focus) bumps the activity tick, which resets idle timers and snaps `bored`/`sleeping` back to `idle`
+- **Auto-return** — `celebrating` and `confused` each return to `idle` after 3s on their own
+
+The chat layer drives the conversational states (`listening`, `thinking`, `speaking`, `celebrating`, `confused`) by calling `setBrandeeState(...)` from `useChat.ts` and `ChatInput.tsx`. The state machine handles everything else.
+
+### Cross-Fades and Transition Frames
+
+Switching between certain state pairs plays an intermediate pose so the character doesn't snap awkwardly. There are two kinds, declared in `constants.ts`:
+
+- **Single-frame transitions** (`TRANSITIONS`) — e.g. `idle → listening` shows `idle-to-listening.png` for `TIMINGS.singleTransitionHold` (600ms), then cross-fades into the new state.
+- **Multi-frame sequences** (`TRANSITION_SEQUENCES`) — for cinematic moments like waking up, where `sleeping → listening` plays `waking-up.png` (800ms) then `bored-to-listening.png` (500ms) before resolving.
+
+State pairs without a defined transition just cross-fade directly. The active transition frame, if any, is exposed alongside the state via `transitionFrame` and rendered by `BrandeeImage`.
+
+### Compositing onto the Desk — Per-State Layouts
+
+Each PNG was illustrated independently, so the character's body sits at a slightly different position in every frame. To keep her grounded on the desk through every state and transition, `<BrandeeWithDesk>` (`src/components/brandee/BrandeeWithDesk.tsx`) reads per-asset layout values from `src/components/brandee/layouts.ts`:
+
+| Field         | Purpose                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `bodyBottomY` | Y coordinate where the bottom of the character's body sits, in reference pixels (stage width = 420) |
+| `bodyX`       | Horizontal offset from stage center                                                                  |
+| `behindBase`  | When `true`, the desk renders above the character (arms hide behind the surface)                     |
+
+Both `STATE_LAYOUTS` (one per state) and `FRAME_LAYOUTS` (overrides for individual transition frames) are stored in the file. The wrapper scales these reference values to whatever size the caller is rendering (sidebar avatar, mobile top strip, etc.).
+
+### The `/playground` Page — Tuning UI
+
+Tweaking layouts by hand-editing numbers is painful, so the project ships a dedicated tuning page at [`/playground`](http://localhost:3000/playground) (`src/app/playground/page.tsx`).
+
+What it gives you:
+
+- **State picker** — click any of the nine states or any transition frame to lock the stage to it
+- **`disableAutoTransitions`** — `useBrandeeState` is initialised in playground mode so timers don't fire; the state stays put while you tune
+- **Sliders** for `bodyX` and `bodyBottomY`, plus a `behindBase` toggle, all live-previewed against the actual desk
+- **Trigger buttons** to fire real `setState` calls and watch single-frame and multi-frame transition sequences play out, with a per-event log showing which path was taken
+- **"Copy paste-ready TS"** button that emits the entire `STATE_LAYOUTS` / `FRAME_LAYOUTS` block formatted exactly as `layouts.ts` expects — paste over the existing block and you're done
+
+Workflow: open `/playground`, tune until everything sits cleanly on the desk, copy the generated block, paste into `layouts.ts`, commit.
 
 ## What I'd Improve With More Time
 
