@@ -25,6 +25,16 @@ export interface AssetLayout {
 /** Reference stage width these values were tuned at (the playground). */
 export const LAYOUT_REFERENCE_WIDTH = 420;
 
+/**
+ * Vertical overlap between the Brandee box bottom and the table top, in
+ * reference pixels. The stage is sized as `width + tableHeight - this` so
+ * that, at the default `bodyBottomY === width`, Brandee's body bottom sits
+ * exactly this many pixels INTO the table area. Both the playground and
+ * `<BrandeeWithDesk>` must use the same value or sleeping/leaning poses
+ * drift relative to where they were tuned.
+ */
+export const STAGE_TABLE_OVERLAP = 10;
+
 /** Default applied to any state/frame that hasn't been tuned yet. */
 export const DEFAULT_LAYOUT: AssetLayout = {
   bodyBottomY: 420,

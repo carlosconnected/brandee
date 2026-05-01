@@ -6,7 +6,7 @@ import { useUser } from '@/hooks/useUser';
 import { useBrandeeState } from '@/components/brandee/useBrandeeState';
 import { clearGreetingHistory } from '@/components/brandee/greetingHistory';
 import { ChatPanel } from '@/components/chat/ChatPanel';
-import { Brandee } from '@/components/brandee/Brandee';
+import { BrandeeWithDesk } from '@/components/brandee/BrandeeWithDesk';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { MenuIcon } from '@/components/icons';
@@ -74,7 +74,7 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
       </button>
 
       {/* ── AVATAR CARD ── mobile only top strip (desktop avatar lives inside the sidebar) */}
-      <aside className="lg:hidden shrink-0 order-1 h-[20vh] w-full bg-panel border border-divider rounded-2xl relative overflow-hidden flex items-center justify-center">
+      <aside className="lg:hidden shrink-0 order-1 h-[28vh] w-full bg-panel border border-divider rounded-2xl relative overflow-hidden flex items-center justify-center">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -82,7 +82,11 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
               'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
           }}
         />
-        <Brandee state={brandeeState} transitionFrame={brandeeTransitionFrame} size={130} />
+        <BrandeeWithDesk
+          state={brandeeState}
+          transitionFrame={brandeeTransitionFrame}
+          size={130}
+        />
       </aside>
 
       {/* ── CHAT CARD ── fills remaining space (chat is now the only main panel on desktop) */}

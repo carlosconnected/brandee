@@ -15,6 +15,7 @@ import {
 import {
   DEFAULT_LAYOUT as DEFAULT_LAYOUT_FROM_FILE,
   FRAME_LAYOUTS,
+  STAGE_TABLE_OVERLAP,
   STATE_LAYOUTS,
   type AssetLayout as PersistedAssetLayout,
 } from "@/components/brandee/layouts";
@@ -36,7 +37,9 @@ const STAGE_WIDTH = 420;
 
 const TABLE_RATIO = 636 / 855;
 const TABLE_DISPLAY_H = Math.round(STAGE_WIDTH * TABLE_RATIO); // ~312
-const STAGE_HEIGHT = STAGE_WIDTH + TABLE_DISPLAY_H - 10; // ~702
+// Use the shared overlap constant so the playground and BrandeeWithDesk
+// stay in lockstep — drift here makes tuned values misalign in production.
+const STAGE_HEIGHT = STAGE_WIDTH + TABLE_DISPLAY_H - STAGE_TABLE_OVERLAP;
 
 const DEFAULT_BODY_BOTTOM_Y = STAGE_WIDTH; // 420 → Brandee box top at 0
 const DEFAULT_BODY_X = 0;

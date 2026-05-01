@@ -4,7 +4,7 @@ import Image from 'next/image';
 import type { BrandeeState } from '@/types';
 import { Brandee } from './Brandee';
 import { frameUrl } from './constants';
-import { LAYOUT_REFERENCE_WIDTH, resolveLayout } from './layouts';
+import { LAYOUT_REFERENCE_WIDTH, STAGE_TABLE_OVERLAP, resolveLayout } from './layouts';
 
 interface BrandeeWithDeskProps {
   state: BrandeeState;
@@ -26,6 +26,11 @@ const TABLE_RATIO = 636 / 855;
  * Layout values are tuned in the playground at a 420px reference width and
  * scaled proportionally for any other render size.
  */
+// CSS transition duration for the body's Y/X morph as layout values change
+// between states and transition frames. Tuned to roughly match the image
+// cross-fade in BrandeeImage so the position glides while the pose dissolves.
+const POSITION_MORPH_MS = 500;
+
 export function BrandeeWithDesk({
   state,
   transitionFrame = null,
@@ -35,14 +40,16 @@ export function BrandeeWithDesk({
   const layout = resolveLayout(state, transitionFrame);
   const scale  = size / LAYOUT_REFERENCE_WIDTH;
 
-  // Table is bottom-anchored, full width, natural aspect.
-  const tableHeight = Math.round(size * TABLE_RATIO);
   // Scale layout coords from the reference 420 stage to the actual render size.
   const bodyBottomY = layout.bodyBottomY * scale;
   const bodyX       = layout.bodyX       * scale;
-  // Stage height = enough room for Brandee box + the table beneath, with the
-  // table overlapping the bottom of Brandee per the layout.
-  const stageHeight = Math.max(bodyBottomY, size) + tableHeight - 30 * scale;
+
+  // Stage height is FIXED for a given `size` — independent of the active
+  // layout's bodyBottomY. This prevents the container from resizing during
+  // transitions (which would cause layout shift in the parent). Matches the
+  // playground stage proportions: width + table height − the shared overlap.
+  const tableHeight = Math.round(size * TABLE_RATIO);
+  const stageHeight = size + tableHeight - STAGE_TABLE_OVERLAP * scale;
 
   return (
     <div
@@ -66,6 +73,9 @@ export function BrandeeWithDesk({
           top: bodyBottomY - size,
           left: '50%',
           transform: `translateX(calc(-50% + ${bodyX}px))`,
+          // Smoothly morph the body position when the active layout changes
+          // (e.g. mid-transition between a state and a transition frame).
+          transition: `top ${POSITION_MORPH_MS}ms linear, transform ${POSITION_MORPH_MS}ms linear`,
         }}
       >
         <Brandee state={state} transitionFrame={transitionFrame} size={size} />

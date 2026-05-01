@@ -4,7 +4,12 @@ import { useState, useEffect, useRef, startTransition } from 'react';
 import type { BrandeeState, Message } from '@/types';
 
 const STORAGE_KEY = 'brandee-messages';
-const TYPING_WORD_DELAY_MS = 38;
+// Word-by-word typing cadence. Bumped from 38 to 50ms (~30% slower) for a
+// more deliberate reading pace.
+const TYPING_WORD_DELAY_MS = 50;
+// Hold the `speaking` state for an extra beat after the typing animation
+// finishes — gives Brandee a moment to "finish her thought" before relaxing.
+const SPEAKING_TAIL_MS = 1000;
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -131,10 +136,13 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
       setIsSpeaking(true);
 
       simulateTyping(reply, assistantId, () => {
-        setIsSpeaking(false);
-        // Only return to idle if no cue was active — celebrate/confused
-        // states auto-transition out on their own timers from the state hook.
-        if (cue === null) setBrandeeState?.('idle');
+        // Hold the speaking visual for one more beat after the last word is
+        // typed, then unwind. Celebrate/confused cues auto-return to idle on
+        // their own timers from the state hook, so we don't override them.
+        typingTimerRef.current = setTimeout(() => {
+          setIsSpeaking(false);
+          if (cue === null) setBrandeeState?.('idle');
+        }, SPEAKING_TAIL_MS);
       });
     } catch {
       setIsThinking(false);

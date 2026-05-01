@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import type { BrandeeState } from '@/types';
-import { Brandee } from '@/components/brandee/Brandee';
+import { BrandeeWithDesk } from '@/components/brandee/BrandeeWithDesk';
 import {
   ButterflyIcon,
   CertificatesIcon,
@@ -134,7 +134,11 @@ export function Sidebar({
                 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
             }}
           />
-          <Brandee state={brandeeState} transitionFrame={brandeeTransitionFrame} size={390} />
+          <BrandeeWithDesk
+            state={brandeeState}
+            transitionFrame={brandeeTransitionFrame}
+            size={300}
+          />
         </div>
 
         {/* User profile + sign out */}
