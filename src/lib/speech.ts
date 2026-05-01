@@ -52,6 +52,79 @@ export function cancelSpeech(): void {
   window.speechSynthesis.cancel();
 }
 
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  Speech recognition (mic in)                                              */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+interface RecognitionHandle {
+  stop: () => void;
+}
+
+interface StartRecognitionOptions {
+  /** Fired with the latest transcript. `isFinal` is true on the last segment. */
+  onResult: (transcript: string, isFinal: boolean) => void;
+  /** Fired once when the recognition session ends (manually or automatically). */
+  onEnd?: () => void;
+  /** Fired on errors (denied permission, no speech detected, network, etc.). */
+  onError?: (errorCode: string) => void;
+  lang?: string;
+}
+
+export function recognitionAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
+  );
+}
+
+/**
+ * Starts a one-shot speech recognition session. Returns a handle whose
+ * `stop()` ends recognition early. Returns null if the browser doesn't
+ * support it.
+ */
+export function startRecognition(opts: StartRecognitionOptions): RecognitionHandle | null {
+  if (!recognitionAvailable()) return null;
+
+  // SpeechRecognition isn't standardised yet; Chrome/Edge use the webkit prefix.
+  const Ctor =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+  if (!Ctor) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognition: any = new Ctor();
+  recognition.continuous     = false;        // one phrase per session
+  recognition.interimResults = true;         // partial transcripts as user speaks
+  recognition.lang           = opts.lang ?? 'en-US';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  recognition.onresult = (event: any) => {
+    const result      = event.results[event.results.length - 1];
+    const transcript  = result[0].transcript as string;
+    opts.onResult(transcript, Boolean(result.isFinal));
+  };
+
+  recognition.onend = () => opts.onEnd?.();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  recognition.onerror = (e: any) => opts.onError?.(e?.error ?? 'unknown');
+
+  try {
+    recognition.start();
+  } catch {
+    return null;
+  }
+
+  return {
+    stop: () => {
+      try {
+        recognition.stop();
+      } catch {
+        /* ignore */
+      }
+    },
+  };
+}
+
 function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   const englishVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
   return (

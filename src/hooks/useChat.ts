@@ -91,7 +91,7 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
     tick();
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, viaVoice: boolean = false) {
     const text = content.trim();
     if (!text || isThinking || isSpeaking) return;
 
@@ -159,10 +159,10 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
         }, SPEAKING_TAIL_MS);
       });
 
-      if (cue === null) {
-        // Only voice the regular `speaking` state — celebrate/confused are
-        // brief 3s visual reactions. Their state auto-returns to idle on
-        // its own timer; we don't want TTS still talking past that.
+      // TTS only when the user composed via mic AND it's a regular speaking
+      // reply. Typed messages get a silent reply (typing animation only).
+      // Celebrate/confused cues are short visual reactions — no TTS for those.
+      if (viaVoice && cue === null) {
         speakText(reply, () => {
           speechDone = true;
           tryFinishSpeaking();

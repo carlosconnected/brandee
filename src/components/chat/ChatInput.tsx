@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { MAX_MSG_CHARS } from '@/lib/schema';
 import type { BrandeeState } from '@/types';
+import { recognitionAvailable, startRecognition } from '@/lib/speech';
+import { MicIcon } from '@/components/icons';
 
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
-  onSend: (value: string) => void;
+  /** `viaVoice` is true when the message was composed (at least partly) via the mic. */
+  onSend: (value: string, viaVoice: boolean) => void;
   disabled: boolean;
   /** Optional — fires on every focus / keystroke so Brandee can wake up. */
   onActivity?: () => void;
@@ -73,12 +76,95 @@ export function ChatInput({
     };
   }, []);
 
+  // ── Microphone (speech-to-text) ──────────────────────────────────────────
+  // When the mic was used to compose the current message we set `viaVoiceRef`
+  // — that flag rides along with the send so the chat layer knows to play
+  // the reply back as TTS. Cleared after every send.
+  const [isListening, setIsListening] = useState(false);
+  const [micError, setMicError]       = useState<string | null>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
+  const viaVoiceRef    = useRef(false);
+  const baseValueRef   = useRef('');
+  const micSupported   = recognitionAvailable();
+
+  function micErrorMessage(code: string): string {
+    switch (code) {
+      case 'not-allowed':
+      case 'permission-denied':
+        return 'Mic blocked. Allow microphone access in browser/system settings.';
+      case 'no-speech':
+        return 'Didn’t catch that — try again.';
+      case 'audio-capture':
+        return 'No microphone available.';
+      case 'network':
+        return 'Voice recognition needs an internet connection.';
+      case 'service-not-allowed':
+        return 'Voice recognition service is unavailable.';
+      default:
+        return `Mic error: ${code}`;
+    }
+  }
+
+  function startMic() {
+    if (isListening || disabled) return;
+
+    baseValueRef.current = value;
+    setMicError(null);
+    setIsListening(true);
+    onActivity?.();
+
+    const handle = startRecognition({
+      onResult: (transcript, isFinal) => {
+        // Replace whatever's after the base value with the latest interim/final
+        // transcript. This way the textarea updates live while the user speaks.
+        const sep = baseValueRef.current && !baseValueRef.current.endsWith(' ') ? ' ' : '';
+        onChange(baseValueRef.current + sep + transcript);
+        if (isFinal) {
+          viaVoiceRef.current = true;
+          baseValueRef.current = baseValueRef.current + sep + transcript;
+        }
+      },
+      onEnd: () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+      },
+      onError: (errorCode) => {
+        setMicError(micErrorMessage(errorCode));
+        setIsListening(false);
+        recognitionRef.current = null;
+      },
+    });
+
+    if (!handle) {
+      setMicError('Voice recognition not available in this browser.');
+      setIsListening(false);
+      return;
+    }
+    recognitionRef.current = handle;
+  }
+
+  function stopMic() {
+    recognitionRef.current?.stop();
+  }
+
+  // Stop recognition if the input gets disabled (chat starts thinking/speaking).
+  useEffect(() => {
+    if (disabled && recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  }, [disabled]);
+
+  function performSend() {
+    if (!canSend) return;
+    onSend(value, viaVoiceRef.current);
+    viaVoiceRef.current = false;
+    baseValueRef.current = '';
+  }
+
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!disabled && value.trim() && !overLimit) {
-        onSend(value);
-      }
+      performSend();
     }
   }
 
@@ -106,8 +192,25 @@ export function ChatInput({
           className="flex-1 resize-none bg-transparent text-content placeholder:text-muted text-[21px] leading-normal outline-none min-h-[34px] max-h-[200px] disabled:opacity-50 py-1"
         />
 
+        {micSupported && (
+          <button
+            type="button"
+            onClick={isListening ? stopMic : startMic}
+            disabled={disabled}
+            aria-label={isListening ? 'Stop voice input' : 'Speak instead of typing'}
+            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
+              isListening
+                ? 'bg-red-500/90 hover:bg-red-500 text-white animate-pulse'
+                : 'bg-card hover:bg-card/70 text-muted hover:text-content border border-divider'
+            }`}
+          >
+            <MicIcon className="w-4 h-4" />
+          </button>
+        )}
+
         <button
-          onClick={() => canSend && onSend(value)}
+          type="button"
+          onClick={performSend}
           disabled={!canSend}
           aria-label="Send message"
           className="shrink-0 w-10 h-10 rounded-xl bg-brand hover:bg-brand-dark disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-colors duration-150"
@@ -117,6 +220,12 @@ export function ChatInput({
           </svg>
         </button>
       </div>
+
+      {micError && (
+        <p className="text-xs text-red-400 px-1 leading-snug">
+          {micError}
+        </p>
+      )}
 
       {nearLimit && (
         <p className={`text-md text-right pr-1 ${overLimit ? 'text-red-500' : 'text-muted'}`}>

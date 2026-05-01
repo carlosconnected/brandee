@@ -8,7 +8,7 @@ interface ChatPanelProps {
   messages: Message[];
   inputValue: string;
   onInputChange: (v: string) => void;
-  onSend: (v: string) => void;
+  onSend: (v: string, viaVoice: boolean) => void;
   onClear: () => void;
   isThinking: boolean;
   isSpeaking: boolean;

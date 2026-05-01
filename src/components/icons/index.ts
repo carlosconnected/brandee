@@ -6,6 +6,7 @@ export { CoursesIcon }        from './CoursesIcon';
 export { DashboardIcon }      from './DashboardIcon';
 export { DiscoverIcon }       from './DiscoverIcon';
 export { MenuIcon }           from './MenuIcon';
+export { MicIcon }            from './MicIcon';
 export { PricingIcon }        from './PricingIcon';
 export { ResourcesIcon }      from './ResourcesIcon';
 export { ServicesIcon }       from './ServicesIcon';

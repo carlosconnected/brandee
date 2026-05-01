@@ -40,7 +40,7 @@ describe('ChatInput', () => {
     const onSend = vi.fn();
     render(<ChatInput value="hello" onChange={noop} onSend={onSend} disabled={false} />);
     await userEvent.click(screen.getByRole('button', { name: /send/i }));
-    expect(onSend).toHaveBeenCalledWith('hello');
+    expect(onSend).toHaveBeenCalledWith('hello', false);
   });
 
   it('does not call onSend when disabled', async () => {
