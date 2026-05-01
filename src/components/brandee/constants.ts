@@ -31,12 +31,18 @@ export const STATE_TO_FRAMES: Record<BrandeeState, FrameEntry[]> = {
   sleeping: [{ frame: "sleeping.png", hold: 0 }],
   listening: [{ frame: "listening.png", hold: 0 }],
   thinking: [{ frame: "thinking.png", hold: 0 }],
-  speaking: [{ frame: "speaking.png", hold: 0 }],
+  speaking: [
+    { frame: "speaking-1.png", hold: 250 },
+    { frame: "speaking-2.png", hold: 250 },
+  ],
   celebrating: [
     { frame: "celebrating-1.png", hold: 300 },
     { frame: "celebrating-2.png", hold: 300 },
   ],
-  confused: [{ frame: "confused.png", hold: 0 }],
+  confused: [
+    { frame: "confused-1.png", hold: 500 },
+    { frame: "confused-2.png", hold: 500 },
+  ],
 };
 
 /**
@@ -50,6 +56,7 @@ export const TRANSITIONS: Record<string, string> = {
   "listening->thinking": "listening-to-thinking.png",
   "thinking->speaking": "thinking-to-speaking.png",
   "thinking->celebrating": "thinking-to-celebrating.png",
+  "celebrating->idle": "thinking-to-celebrating.png",
   "idle->bored": "idle-to-bored.png",
   "bored->sleeping": "bored-to-sleeping.png",
   "bored->listening": "bored-to-listening.png",
@@ -65,8 +72,8 @@ export const TRANSITION_SEQUENCES: Record<
   { frame: string; hold: number }[]
 > = {
   "sleeping->listening": [
-    { frame: "waking-up.png", hold: 400 },
-    { frame: "bored-to-listening.png", hold: 250 },
+    { frame: "waking-up.png", hold: 800 },
+    { frame: "bored-to-listening.png", hold: 500 },
   ],
 };
 
