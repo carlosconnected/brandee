@@ -25,20 +25,24 @@ const ALL_STATES: BrandeeState[] = [
   'confused',
 ];
 
-// Stage geometry — base.png is ~1024×716, state PNGs are square (1024×1024).
-// We give the stage extra vertical room so Brandee can sit AT the desk top
-// rather than fighting object-contain in a square box.
+// Stage geometry — table.png is 855×636, state PNGs are square (1024×1024).
+// Stage height is sized so a 420×420 Brandee box can sit fully above the
+// table, with the table pinned at the bottom and its surface meeting
+// Brandee's body-bottom around the default Y.
 const STAGE_WIDTH  = 420;
-const STAGE_HEIGHT = 700;
 
-// base.png native ratio
-const BASE_RATIO     = 716 / 1024;
-const BASE_DISPLAY_H = Math.round(STAGE_WIDTH * BASE_RATIO); // ~294
+const TABLE_RATIO     = 636 / 855;
+const TABLE_DISPLAY_H = Math.round(STAGE_WIDTH * TABLE_RATIO); // ~312
+const STAGE_HEIGHT    = STAGE_WIDTH + TABLE_DISPLAY_H - 30;     // ~702
 
-// The default Y (in stage pixels) where Brandee's body bottom should sit.
-// This corresponds visually to "the top of the desk surface" inside base.png.
-// Each state can override this via the slider below.
-const DEFAULT_BODY_BOTTOM_Y = 460;
+// Default Y (stage pixels) where Brandee's body bottom should sit — aligned
+// to the desk surface inside table.png so her torso meets the desk top.
+const DEFAULT_BODY_BOTTOM_Y = STAGE_WIDTH; // = 420 → Brandee box top at 0
+
+// Default X offset (stage pixels) from the horizontal center of the stage.
+// 0 = perfectly centered. Positive moves Brandee right, negative moves left.
+const DEFAULT_BODY_X = 0;
+const BODY_X_RANGE   = 200; // slider goes from −200 to +200
 
 interface LogEntry {
   id: number;
@@ -51,12 +55,14 @@ interface LogEntry {
 
 interface StateLayout {
   bodyBottomY: number;
+  bodyX: number;
   behindBase: boolean;
 }
 
 const DEFAULT_LAYOUT: StateLayout = {
   bodyBottomY: DEFAULT_BODY_BOTTOM_Y,
-  behindBase: false,
+  bodyX:       DEFAULT_BODY_X,
+  behindBase:  false,
 };
 
 export default function BrandeePlayground() {
@@ -66,7 +72,7 @@ export default function BrandeePlayground() {
 
   // Per-state layout: where Brandee's body bottom sits + whether she renders
   // behind the desk surface. All states default to the same values; user
-  // tunes each state until it composites cleanly with base.png.
+  // tunes each state until it composites cleanly with table.png.
   const [layoutByState, setLayoutByState] = useState<Record<BrandeeState, StateLayout>>(
     () =>
       Object.fromEntries(
@@ -151,19 +157,19 @@ export default function BrandeePlayground() {
             <div className="relative z-10 flex flex-col items-center gap-4">
               {/*
                 Tall stage so Brandee (square upper body, 1024×1024) and
-                base.png (1024×716, just desk+chair+legs) can stack with
+                table.png (855×636, just the desk surface) can stack with
                 proper overlap at the desk-top line.
               */}
               <div
                 className="relative"
                 style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT }}
               >
-                {/* base.png — pinned to bottom, natural aspect ratio */}
+                {/* table.png — pinned to bottom, natural aspect ratio */}
                 <Image
-                  src={frameUrl('base.png')}
+                  src={frameUrl('table.png')}
                   alt="Desk"
                   width={STAGE_WIDTH}
-                  height={BASE_DISPLAY_H}
+                  height={TABLE_DISPLAY_H}
                   priority
                   draggable={false}
                   className={`absolute bottom-0 left-0 right-0 pointer-events-none select-none ${
@@ -171,10 +177,15 @@ export default function BrandeePlayground() {
                   }`}
                 />
 
-                {/* Brandee — positioned so her body bottom sits at bodyBottomY */}
+                {/* Brandee — positioned so her body bottom sits at bodyBottomY,
+                    centered horizontally with optional bodyX offset. */}
                 <div
-                  className="absolute z-10 left-0 right-0 flex justify-center"
-                  style={{ top: brandeeBoxTop }}
+                  className="absolute z-10"
+                  style={{
+                    top: brandeeBoxTop,
+                    left: '50%',
+                    transform: `translateX(calc(-50% + ${layout.bodyX}px))`,
+                  }}
                 >
                   <Brandee
                     state={state}
@@ -263,6 +274,39 @@ export default function BrandeePlayground() {
               </button>
             </section>
 
+            {/* Body X position slider */}
+            <section>
+              <div className="flex items-baseline justify-between mb-2">
+                <h2 className="text-xs uppercase tracking-wider text-muted">
+                  Body X offset
+                </h2>
+                <span className="text-xs font-mono text-content">
+                  {layout.bodyX > 0 ? `+${layout.bodyX}` : layout.bodyX}px
+                </span>
+              </div>
+              <input
+                type="range"
+                min={-BODY_X_RANGE}
+                max={BODY_X_RANGE}
+                step={1}
+                value={layout.bodyX}
+                onChange={(e) => updateLayout({ bodyX: Number(e.target.value) })}
+                className="w-full accent-brand cursor-pointer"
+              />
+              <p className="text-[11px] text-dim mt-2 leading-relaxed">
+                Horizontal offset from the stage center. Negative = left,
+                positive = right. Useful when a pose&apos;s asymmetric body
+                weight needs to nudge sideways to sit cleanly on the desk.
+              </p>
+              <button
+                type="button"
+                onClick={() => updateLayout({ bodyX: DEFAULT_BODY_X })}
+                className="text-[11px] text-muted hover:text-content underline underline-offset-2 mt-1 cursor-pointer"
+              >
+                reset to center (0)
+              </button>
+            </section>
+
             {/* States grid */}
             <section>
               <h2 className="text-xs uppercase tracking-wider text-muted mb-3">States</h2>
@@ -328,7 +372,10 @@ export default function BrandeePlayground() {
                   type="button"
                   onClick={() => {
                     const cfg = ALL_STATES
-                      .map((s) => `  ${s}: { bodyBottomY: ${layoutByState[s].bodyBottomY}, behindBase: ${layoutByState[s].behindBase} },`)
+                      .map((s) => {
+                        const l = layoutByState[s];
+                        return `  ${s}: { bodyBottomY: ${l.bodyBottomY}, bodyX: ${l.bodyX}, behindBase: ${l.behindBase} },`;
+                      })
                       .join('\n');
                     navigator.clipboard.writeText(`{\n${cfg}\n}`);
                   }}

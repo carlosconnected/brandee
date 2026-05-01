@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import type { BrandeeState } from '@/types';
-import { frameUrl, getFrames, RESTING_STATES, TIMINGS } from './constants';
+import { frameUrl, getFrames, TIMINGS } from './constants';
 import { useIdleBehavior } from './useIdleBehavior';
 
 interface BrandeeImageProps {
@@ -15,14 +15,16 @@ interface BrandeeImageProps {
 }
 
 /**
- * Renders the active Brandee frame with three animation layers:
+ * Renders the active Brandee frame with two animation layers:
  *
  *   Outer wrapper  → wake-up bounce (one-shot when leaving sleeping)
- *   Breathe wrap   → continuous breathe (resting states only)
- *   Float wrap     → continuous float   (resting states only)
  *   AnimatePresence→ short cross-fade between every distinct image
  *                    (state-to-state OR state-to-transition-frame)
  *   Micro-behavior → idle-only blink/look/wiggle/etc, paused mid-transition
+ *
+ * Continuous breathe/float motion was removed because it conflicts with
+ * the desk-overlay composition — Brandee's body shifting up and down breaks
+ * her alignment with the desk top.
  */
 export function BrandeeImage({ state, size, transitionFrame = null }: BrandeeImageProps) {
   const frames        = getFrames(state);
@@ -69,7 +71,6 @@ export function BrandeeImage({ state, size, transitionFrame = null }: BrandeeIma
     prevStateRef.current = state;
   }, [state]);
 
-  const isResting    = RESTING_STATES.has(state) && transitionFrame === null;
   const stateFrame   = frames[frameIndex]?.frame ?? frames[0]!.frame;
   const currentFrame = transitionFrame ?? stateFrame;
   // Cross-fade key — only changes on state changes or transition frames.
@@ -82,35 +83,33 @@ export function BrandeeImage({ state, size, transitionFrame = null }: BrandeeIma
       className={`brandee-wrapper relative ${wakingUp ? 'brandee-wake-up' : ''}`}
       style={{ width: size, height: size }}
     >
-      <div className={`w-full h-full ${isResting ? 'brandee-breathe' : ''}`}>
-        <div className={`relative w-full h-full ${isResting ? 'brandee-float' : ''}`}>
-          {/*
-            Overlapping cross-fade: both old and new images coexist during the
-            transition (positioned absolute, stacked), so we never have a
-            moment where the avatar is invisible. `initial={false}` skips the
-            very first mount fade so the avatar appears immediately on load.
-          */}
-          <AnimatePresence initial={false}>
-            <motion.div
-              key={presenceKey}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{    opacity: 0 }}
-              transition={{ duration: TIMINGS.crossFadeDuration / 1000, ease: 'linear' }}
-              className={`absolute inset-0 w-full h-full ${microBehavior ? `brandee-${kebab(microBehavior)}` : ''}`}
-            >
-              <Image
-                src={frameUrl(currentFrame)}
-                alt={`Brandee — ${state}`}
-                width={size}
-                height={size}
-                priority
-                draggable={false}
-                className="w-full h-full object-contain select-none pointer-events-none"
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
+      <div className="relative w-full h-full">
+        {/*
+          Overlapping cross-fade: both old and new images coexist during the
+          transition (positioned absolute, stacked), so we never have a
+          moment where the avatar is invisible. `initial={false}` skips the
+          very first mount fade so the avatar appears immediately on load.
+        */}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={presenceKey}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{    opacity: 0 }}
+            transition={{ duration: TIMINGS.crossFadeDuration / 1000, ease: 'linear' }}
+            className={`absolute inset-0 w-full h-full ${microBehavior ? `brandee-${kebab(microBehavior)}` : ''}`}
+          >
+            <Image
+              src={frameUrl(currentFrame)}
+              alt={`Brandee — ${state}`}
+              width={size}
+              height={size}
+              priority
+              draggable={false}
+              className="w-full h-full object-contain select-none pointer-events-none"
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
