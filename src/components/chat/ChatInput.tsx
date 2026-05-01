@@ -16,6 +16,11 @@ interface ChatInputProps {
   onActivity?: () => void;
   /** Optional — drives Brandee's listening / idle states from the input. */
   setBrandeeState?: (state: BrandeeState) => void;
+  /**
+   * If set, the conversation has reached a server-side cap. Send is disabled
+   * and the message is shown above the input. User must clear chat to recover.
+   */
+  conversationError?: string | null;
 }
 
 const LISTENING_INACTIVITY_MS = 2000;
@@ -27,6 +32,7 @@ export function ChatInput({
   disabled,
   onActivity,
   setBrandeeState,
+  conversationError = null,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const length      = value.length;
@@ -280,7 +286,7 @@ export function ChatInput({
     onChange(e.target.value);
   }
 
-  const canSend = !disabled && value.trim().length > 0 && !overLimit;
+  const canSend = !disabled && value.trim().length > 0 && !overLimit && !conversationError;
 
   return (
     <div className="flex flex-col gap-1 px-4 pb-4 pt-2">
@@ -350,6 +356,12 @@ export function ChatInput({
           </svg>
         </button>
       </div>
+
+      {conversationError && (
+        <p className="text-xs text-red-400 px-1 leading-snug">
+          {conversationError}
+        </p>
+      )}
 
       {micError && (
         <p className="text-xs text-red-400 px-1 leading-snug">

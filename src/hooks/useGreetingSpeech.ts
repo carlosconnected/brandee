@@ -10,14 +10,14 @@ interface UseGreetingSpeechOptions {
 }
 
 /**
- * Speaks the greeting ("Hi {name}. How can I help you today?") whenever
- * Brandee enters the `greeting` state — which by design happens on the
- * first sign-in of each day (see `greetingHistory.ts`).
+ * Speaks "Hi {name}. How can I help you today?" the first time Brandee enters
+ * the `greeting` state during this component's lifetime. By design this only
+ * fires on a fresh sign-in / first-visit-of-the-day (see `greetingHistory.ts`).
  *
- * No unmount-cleanup that cancels speech: in dev Strict Mode the simulated
- * unmount/remount would otherwise cancel the greeting between the two
- * effect runs and nothing would be audible. Sign-out cancels speech
- * explicitly from `handleSignOut` in page.tsx instead.
+ * Deliberately does NOT touch `setBrandeeState` — the visible greeting wave
+ * is owned by the state machine. If we set state from here, the TTS `onEnd`
+ * callback could fire later and clobber a reply's `speaking` state during
+ * voice-mode conversations.
  */
 export function useGreetingSpeech({ state, userName }: UseGreetingSpeechOptions) {
   useEffect(() => {

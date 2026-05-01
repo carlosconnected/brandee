@@ -41,10 +41,11 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
     isSpeaking,
     sendMessage,
     clearChat,
+    conversationError,
   } = useChat({ userName, setBrandeeState });
 
-  // Speak the greeting out loud on the first sign-in of the day, in sync
-  // with the visual `greeting` state.
+  // Speak the greeting out loud on the first sign-in of the day. The visible
+  // greeting wave is owned by the state machine — this hook only adds audio.
   useGreetingSpeech({ state: brandeeState, userName });
 
   function handleSignOut() {
@@ -109,6 +110,7 @@ function SignedInApp({ userName, onSignOut }: { userName: string; onSignOut: () 
           userName={userName}
           onActivity={reportActivity}
           setBrandeeState={setBrandeeState}
+          conversationError={conversationError}
         />
       </main>
     </div>

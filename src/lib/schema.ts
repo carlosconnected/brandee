@@ -1,8 +1,11 @@
 import { z } from "zod";
 
-export const MAX_MESSAGES = 20;
+// Server-side hard caps. The client trims history to fit before sending
+// (see `useChat.ts`), so well-behaved clients never see a 400 here. The
+// limits stay as a safety net against abuse / malformed requests.
+export const MAX_MESSAGES = 60;
 export const MAX_MSG_CHARS = 2_000;
-export const MAX_TOTAL_CHARS = 16_000;
+export const MAX_TOTAL_CHARS = 32_000;
 export const MAX_NAME_LENGTH = 50;
 
 export const messageSchema = z.object({

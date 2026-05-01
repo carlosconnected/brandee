@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, startTransition } from 'react';
 import type { BrandeeState, Message } from '@/types';
 import { cancelSpeech, speakText } from '@/lib/speech';
+import { MAX_MESSAGES, MAX_TOTAL_CHARS } from '@/lib/schema';
 
 const STORAGE_KEY = 'brandee-messages';
 // Word-by-word typing cadence. Bumped from 38 to 50ms (~30% slower) for a
@@ -32,6 +33,24 @@ function persistMessages(messages: Message[]) {
   } catch {
     /* ignore quota errors */
   }
+}
+
+/**
+ * Trim a conversation to fit the server's caps:
+ *   - keep the most recent MAX_MESSAGES turns
+ *   - drop oldest turns until total chars fits MAX_TOTAL_CHARS
+ *
+ * The full chat history stays in localStorage / on screen — we only
+ * trim what we send to the API so the user never hits a 400 error.
+ */
+function trimForApi<T extends { content: string }>(messages: T[]): T[] {
+  let trimmed = messages.slice(-MAX_MESSAGES);
+  let total   = trimmed.reduce((sum, m) => sum + m.content.length, 0);
+  while (trimmed.length > 1 && total > MAX_TOTAL_CHARS) {
+    total -= trimmed[0]!.content.length;
+    trimmed = trimmed.slice(1);
+  }
+  return trimmed;
 }
 
 interface UseChatOptions {
@@ -94,6 +113,15 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
   async function sendMessage(content: string, viaVoice: boolean = false) {
     const text = content.trim();
     if (!text || isThinking || isSpeaking) return;
+    // Block sends that would exceed the conversation caps. The UI also
+    // disables the send button via `conversationError`, but auto-send paths
+    // (voice mode) need this guard.
+    if (
+      messagesRef.current.length >= MAX_MESSAGES ||
+      messagesRef.current.reduce((s, m) => s + m.content.length, 0) + text.length > MAX_TOTAL_CHARS
+    ) {
+      return;
+    }
 
     // Cancel any speech still rolling from a previous reply.
     cancelSpeech();
@@ -107,7 +135,9 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
     setBrandeeState?.('thinking');
 
     try {
-      const apiMessages = history.map(({ role, content: c }) => ({ role, content: c }));
+      const apiMessages = trimForApi(
+        history.map(({ role, content: c }) => ({ role, content: c }))
+      );
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -185,6 +215,20 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
     }
   }
 
+  // ── Conversation-length validation ──────────────────────────────────────
+  // Mirror the server's caps so the user gets feedback BEFORE hitting a 400.
+  // The pending input text is included in the projected total so the warning
+  // shows up live as you type past the threshold.
+  const totalChars     = messages.reduce((sum, m) => sum + m.content.length, 0);
+  const projectedTotal = totalChars + inputValue.trim().length;
+
+  const conversationError: string | null =
+    messages.length >= MAX_MESSAGES
+      ? `You've reached the limit of ${MAX_MESSAGES} messages in this chat. Click Clear to start a fresh conversation.`
+      : projectedTotal > MAX_TOTAL_CHARS
+        ? 'This conversation has gotten very long. Click Clear to start a fresh chat with Brandee.'
+        : null;
+
   function clearChat() {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     cancelSpeech();
@@ -206,5 +250,6 @@ export function useChat({ userName, setBrandeeState }: UseChatOptions = {}) {
     isSpeaking,
     sendMessage,
     clearChat,
+    conversationError,
   };
 }

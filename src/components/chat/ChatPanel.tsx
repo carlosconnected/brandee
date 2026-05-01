@@ -15,6 +15,7 @@ interface ChatPanelProps {
   userName: string;
   onActivity?: () => void;
   setBrandeeState?: (state: BrandeeState) => void;
+  conversationError?: string | null;
 }
 
 export function ChatPanel({
@@ -28,6 +29,7 @@ export function ChatPanel({
   userName,
   onActivity,
   setBrandeeState,
+  conversationError,
 }: ChatPanelProps) {
   const isDisabled = isThinking || isSpeaking;
 
@@ -87,6 +89,7 @@ export function ChatPanel({
           disabled={isDisabled}
           onActivity={onActivity}
           setBrandeeState={setBrandeeState}
+          conversationError={conversationError}
         />
         <p className="text-center text-[10px] text-dim pb-2 select-none">
           Brandee can make mistakes. Please verify important information.
