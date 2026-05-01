@@ -3,6 +3,7 @@
 A full-stack animated AI chat web app built with Next.js 16, featuring a state-driven SVG avatar, Groq LLM backend, and Framer Motion animations.
 
 **Live demo:** [https://brandee-carlos.vercel.app/](https://brandee-carlos.vercel.app/)
+**Avatar development playground:** [https://brandee-carlos.vercel.app/playground](https://brandee-carlos.vercel.app/playground)
 
 ## Features
 
@@ -207,51 +208,75 @@ What it gives you:
 
 Workflow: open `/playground`, tune until everything sits cleanly on the desk, copy the generated block, paste into `layouts.ts`, commit.
 
+## What I Improved During This Final Round
+
+This round of work focused on turning Brandee from a competent text-only chat into something that genuinely feels alive and personal:
+
+### 1. A New Avatar
+
+Replaced the original four-state SVG with a fully illustrated nine-state character (greeting, idle, bored, sleeping, listening, thinking, speaking, celebrating, confused), composited onto an animated desk scene. The character now reacts to idle time, wakes up when the user comes back, leans in when they're typing, and responds emotionally to what she's saying — not just what state the chat is in.
+
+### 2. Voice Input — Dictation and Hands-Free Mode
+
+Added two distinct voice input flows on top of the Web Speech API: a **single-shot dictation** mic that fills the input so the user can review before sending, and a **continuous hands-free voice mode** that listens, auto-sends after a 2-second silence, and re-arms automatically once Brandee finishes replying. A small heuristic restores question marks the recognition API strips out (so "what's the capital of Italy" arrives correctly punctuated).
+
+### 3. Voice Output — TTS Replies and Spoken Greeting
+
+Brandee now speaks her replies out loud in voice mode using the browser's `speechSynthesis` API, with voice selection tuned to prefer natural-sounding female voices across operating systems. On the first sign-in of any given day, she also waves and greets the user by name out loud — gated by `localStorage` so it fires exactly once per day even with React Strict Mode's dev double-mount.
+
+### 4. The Avatar Playground
+
+Built a dedicated tuning page at [`/playground`](https://brandee-carlos.vercel.app/playground) for compositing the character on top of the desk. It exposes every state and transition frame as clickable previews, with live sliders for horizontal/vertical position and a behind-base toggle, and a one-click "Copy paste-ready TS" button that emits the entire layout block formatted exactly as `layouts.ts` expects. What used to be a slow guess-and-check loop is now a 30-second copy-paste — which is what made the nine-state, multi-frame avatar tractable in the time available.
+
+### 5. Personalized Sign-In
+
+Added a simple sign-in form that captures the user's name on first visit. The name is sanitized (line breaks stripped, capped at 50 characters, so a malicious name can't inject new instructions) and woven into the system prompt, so Brandee greets and addresses the user by name throughout the conversation. Small touch, but it shifts the experience from "talking to a generic agent" to "talking to someone who knows you".
+
 ## What I'd Improve With More Time
 
 ### 1. Multiple Conversations
 
 Right now the app supports a single ongoing conversation. With more time, I would allow users to start fresh chats, switch between past conversations, and organize them — similar to how ChatGPT or Claude handle conversation history.
 
-### 2. Voice Input
+### 2. Better Voice Output
 
-Adding a microphone button would let users speak their messages instead of typing them — making the interaction feel more natural, especially on mobile.
+The current voice output relies on the browser's built-in `speechSynthesis` API, which is free but sounds robotic and varies wildly across browsers and operating systems. With more time I would integrate a proper TTS service like **ElevenLabs**, which produces natural, expressive speech with consistent quality everywhere — turning Brandee from "a chat with a synthesized voice" into something that genuinely feels like talking to a real person.
 
-### 3. Voice Output
-
-The agent would also be able to speak its replies out loud, turning the experience into a true two-way voice conversation — much closer to talking to a real person.
-
-### 4. File & Media Attachments
+### 3. File & Media Attachments
 
 Allow users to attach documents such as documents, images, audio, and video files as part of the conversation. this would let Brandee analyze a contract, describe an image, transcribe an audio clip, or even watch a video to identify problems, follow instructions, or extract key information — making the agent significantly more versatile and useful in real-world scenarios.
 
-### 5. Better Avatar & Animation
+### 4. Better Avatar & Animation
 
-The current avatar is functional but basic. I would invest in a higher-quality design with smoother, more expressive animations — making the experience feel more lifelike and engaging.
+The current avatar is a stack of pre-rendered PNGs driven by a state machine — functional and surprisingly expressive for what it is, but ultimately limited by the fact that every frame had to be illustrated by hand. With more time I would model and rig Brandee in proper 3D animation software (**Blender** as the practical starting point — free, industry-standard, full modeling/rigging/animation pipeline; **Unreal Engine with MetaHuman** as the higher-end option for photoreal results) and either export image sequences for the existing frame-based pipeline or render the character live in the browser via a real-time runtime. This would make every state and transition feel smoother, more lifelike, and far more engaging — without losing the state-machine architecture that already works well.
 
-### 6. User Accounts
+### 5. User Accounts
 
 Adding a proper sign-up and sign-in flow would let the app remember who you are across devices and sessions, and give each user their own private, personalized experience.
 
-### 7. More Layers of Security
+### 6. More Layers of Security
 
 With user accounts in place, additional security measures become possible — such as email verification, password protection, and tying conversations to a specific user rather than just a browser. This makes the app significantly more robust and trustworthy.
 
-### 8. Multilingual Support
+### 7. Multilingual Support
 
 Allow users to interact with the agent in their preferred language. This opens the app up to a much wider audience and makes it feel more inclusive.
 
-### 9. Conversation Export
+### 8. Conversation Export
 
 Let users download or share their conversation as a PDF or text file — useful if the agent gave them valuable advice they want to save or reference later.
 
-### 10. Feedback System
+### 9. Feedback System
 
 Add a simple thumbs up / thumbs down button on each reply. This helps identify where the agent is performing well and where it needs improvement.
 
-### 11. Analytics Dashboard
+### 10. Analytics Dashboard
 
 Track how users interact with the app — most common questions, average session length, drop-off points. This data would be invaluable for improving the product over time.
+
+### 11. Polished Mobile Web Experience
+
+The app is responsive and works on phones, but I didn't have time to properly tune the mobile rendering — spacing, font sizes, the avatar's mobile top strip, on-screen keyboard handling, and the way the chat scrolls when replies stream in all need a dedicated pass. With more time I would treat mobile as a first-class layout rather than a scaled-down desktop view, and test across iOS Safari and Android Chrome to iron out the small inconsistencies that those browsers each introduce.
 
 ### 12. Mobile App
 
@@ -260,6 +285,10 @@ Package the experience as a native iOS and Android app for a smoother, faster ex
 ### 13. Personality Customization
 
 Let users adjust the agent's tone — more formal, more casual, more concise — so the experience feels tailored to their preference.
+
+### 14. More Frequent Feedback Loops with the Team
+
+Most of this project was built heads-down against a tight deadline, which meant I was making product, design, and architectural calls on my own as I went. With more time I would have paused at several checkpoints — early concept, mid-build, and pre-polish — to share progress with the team and gather feedback on the direction. Even a single review session can catch assumptions I didn't realise I was making, surface ideas I wouldn't have thought of, and make sure the final result reflects the team's vision rather than just my interpretation of it.
 
 ## Project Structure
 
