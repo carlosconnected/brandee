@@ -5,6 +5,7 @@ import { MAX_MSG_CHARS } from "@/lib/schema";
 import type { BrandeeState } from "@/types";
 import {
   cancelSpeech,
+  inferQuestionMark,
   recognitionAvailable,
   startRecognition,
 } from "@/lib/speech";
@@ -162,10 +163,13 @@ export function ChatInput({
           baseValueRef.current && !baseValueRef.current.endsWith(" ")
             ? " "
             : "";
-        onChange(baseValueRef.current + sep + transcript);
+        // Show interim text raw; only punctuate once the segment is final
+        // so the "?" doesn't pop in/out as the user keeps speaking.
+        const piece = isFinal ? inferQuestionMark(transcript) : transcript;
+        onChange(baseValueRef.current + sep + piece);
         if (isFinal) {
           viaVoiceRef.current = true;
-          baseValueRef.current = baseValueRef.current + sep + transcript;
+          baseValueRef.current = baseValueRef.current + sep + piece;
         }
       },
       onEnd: () => {
@@ -222,7 +226,9 @@ export function ChatInput({
 
         if (!voiceModeRef.current) return; // user toggled voice mode off
 
-        const text = finalTranscriptRef.current.trim();
+        // Recognition has no punctuation, so infer a "?" when the utterance
+        // looks like a question before sending.
+        const text = inferQuestionMark(finalTranscriptRef.current.trim());
         finalTranscriptRef.current = "";
 
         if (text) {
@@ -393,18 +399,23 @@ export function ChatInput({
           </button>
         )}
 
-        {/* Single-shot dictation (only available outside voice mode) */}
-        {micSupported && !voiceMode && (
+        {/* Single-shot dictation. Stays visible (but disabled) while voice
+            mode is on, so the input controls don't shift around. */}
+        {micSupported && (
           <button
             type="button"
             onClick={isListening ? stopMic : startMic}
-            disabled={disabled}
+            disabled={disabled || voiceMode}
             aria-label={
               isListening ? "Stop voice input" : "Speak instead of typing"
             }
-            title="Dictate a single message"
+            title={
+              voiceMode
+                ? "Exit voice mode to dictate a single message"
+                : "Dictate a single message"
+            }
             className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
-              isListening
+              isListening && !voiceMode
                 ? "bg-red-500/90 hover:bg-red-500 text-white animate-pulse"
                 : "bg-card hover:bg-card/70 text-muted hover:text-content border border-divider"
             }`}

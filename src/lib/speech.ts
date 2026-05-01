@@ -176,6 +176,51 @@ export function startRecognition(opts: StartRecognitionOptions): RecognitionHand
   };
 }
 
+/**
+ * Web Speech Recognition strips punctuation — every transcript comes back as
+ * a flat string of words. To restore the most-noticeable bit (questions), we
+ * check whether the utterance opens with a typical question word and append
+ * a "?" if so. Best-effort: it won't catch every question (e.g. "you free
+ * tonight?") but handles the common wh-/auxiliary cases cleanly.
+ *
+ * Idempotent: existing terminal punctuation is left alone.
+ */
+const QUESTION_STARTERS = new Set([
+  // Wh-words
+  'who', 'whom', 'whose', 'what', 'when', 'where', 'why', 'which', 'how',
+  // Auxiliary verbs that typically front a question
+  'is', 'are', 'was', 'were', 'am',
+  'do', 'does', 'did',
+  'have', 'has', 'had',
+  'can', 'could', 'will', 'would', 'should', 'shall', 'may', 'might', 'must',
+  // Common contractions — speech recognition emits "what's", "isn't", etc.
+  // verbatim, so we list both the bare and contracted forms here. (The check
+  // also strips a trailing apostrophe-suffix as a safety net for browsers
+  // that drop the apostrophe entirely.)
+  "who's", "what's", "when's", "where's", "why's", "how's",
+  "isn't", "aren't", "wasn't", "weren't",
+  "don't", "doesn't", "didn't",
+  "haven't", "hasn't", "hadn't",
+  "can't", "couldn't", "won't", "wouldn't", "shouldn't", "shan't",
+]);
+
+export function inferQuestionMark(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  // Already has terminal punctuation — don't double up.
+  if (/[?.!]$/.test(trimmed)) return trimmed;
+  const firstWord = trimmed
+    .split(/\s+/)[0]!
+    .toLowerCase()
+    .replace(/[^a-z']/g, '');
+  if (QUESTION_STARTERS.has(firstWord)) return `${trimmed}?`;
+  // Fallback: drop a contraction suffix ("whats" → still no match, but
+  // "wheres" / "hows" might come through without an apostrophe on some
+  // browsers). Match on the part before the apostrophe too.
+  const stem = firstWord.includes("'") ? firstWord.split("'")[0]! : firstWord;
+  return QUESTION_STARTERS.has(stem) ? `${trimmed}?` : trimmed;
+}
+
 function pickBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   const englishVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
   return (
