@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { MAX_MSG_CHARS } from '@/lib/schema';
 import type { BrandeeState } from '@/types';
-import { recognitionAvailable, startRecognition } from '@/lib/speech';
-import { MicIcon } from '@/components/icons';
+import { cancelSpeech, recognitionAvailable, startRecognition } from '@/lib/speech';
+import { HeadphonesIcon, MicIcon } from '@/components/icons';
 
 interface ChatInputProps {
   value: string;
@@ -46,9 +46,6 @@ export function ChatInput({
   //   empty value         → idle
   //   no typing for 2s    → idle (even if value still has content)
   // The chat layer owns thinking/speaking — we don't override those.
-  //
-  // We gate on actual value changes (not just dep changes) so that spurious
-  // re-renders from the parent don't clobber upstream states like the greeting.
   const prevValueRef  = useRef(value);
   const idleTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -76,16 +73,30 @@ export function ChatInput({
     };
   }, []);
 
-  // ── Microphone (speech-to-text) ──────────────────────────────────────────
-  // When the mic was used to compose the current message we set `viaVoiceRef`
-  // — that flag rides along with the send so the chat layer knows to play
-  // the reply back as TTS. Cleared after every send.
+  // ── Voice input ──────────────────────────────────────────────────────────
+  // Two modes:
+  //   1. Dictation (mic button)        — single phrase, fills the input,
+  //                                      user clicks send manually. The
+  //                                      reply still gets TTS because the
+  //                                      message was composed via voice.
+  //   2. Voice mode (headphones btn)   — continuous hands-free conversation.
+  //                                      Mic listens, on silence auto-sends,
+  //                                      reply plays via TTS, mic restarts.
+  //                                      Toggle off to exit.
   const [isListening, setIsListening] = useState(false);
-  const [micError, setMicError]       = useState<string | null>(null);
-  const recognitionRef = useRef<{ stop: () => void } | null>(null);
-  const viaVoiceRef    = useRef(false);
-  const baseValueRef   = useRef('');
-  const micSupported   = recognitionAvailable();
+  const [voiceMode,   setVoiceMode]   = useState(false);
+  const [micError,    setMicError]    = useState<string | null>(null);
+
+  const recognitionRef    = useRef<{ stop: () => void } | null>(null);
+  const viaVoiceRef       = useRef(false);
+  const baseValueRef      = useRef('');
+  const finalTranscriptRef = useRef('');
+
+  // Keep a live ref of voiceMode so recognition callbacks read the latest.
+  const voiceModeRef = useRef(voiceMode);
+  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
+
+  const micSupported = recognitionAvailable();
 
   function micErrorMessage(code: string): string {
     switch (code) {
@@ -105,8 +116,9 @@ export function ChatInput({
     }
   }
 
+  // ── Dictation (single phrase) ────────────────────────────────────────────
   function startMic() {
-    if (isListening || disabled) return;
+    if (isListening || disabled || voiceMode) return;
 
     baseValueRef.current = value;
     setMicError(null);
@@ -115,8 +127,6 @@ export function ChatInput({
 
     const handle = startRecognition({
       onResult: (transcript, isFinal) => {
-        // Replace whatever's after the base value with the latest interim/final
-        // transcript. This way the textarea updates live while the user speaks.
         const sep = baseValueRef.current && !baseValueRef.current.endsWith(' ') ? ' ' : '';
         onChange(baseValueRef.current + sep + transcript);
         if (isFinal) {
@@ -147,13 +157,110 @@ export function ChatInput({
     recognitionRef.current?.stop();
   }
 
-  // Stop recognition if the input gets disabled (chat starts thinking/speaking).
+  // ── Voice mode (continuous loop) ─────────────────────────────────────────
+  function startVoiceListening() {
+    if (recognitionRef.current) return; // already listening
+    if (disabled) return;                // chat is busy
+
+    finalTranscriptRef.current = '';
+    setMicError(null);
+    setIsListening(true);
+    onActivity?.();
+
+    const handle = startRecognition({
+      onResult: (transcript, isFinal) => {
+        // Show what we're hearing live in the input.
+        onChange(transcript);
+        if (isFinal) {
+          finalTranscriptRef.current = transcript;
+          viaVoiceRef.current = true;
+        }
+      },
+      onEnd: () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+
+        if (!voiceModeRef.current) return; // user toggled voice mode off
+
+        const text = finalTranscriptRef.current.trim();
+        finalTranscriptRef.current = '';
+
+        if (text) {
+          // Auto-send. Brandee replies via TTS, then we'll restart via the
+          // useEffect below once `disabled` flips back to false.
+          onSend(text, true);
+          onChange('');
+          baseValueRef.current = '';
+          viaVoiceRef.current  = false;
+        } else {
+          // Silence with no content — keep listening.
+          startVoiceListening();
+        }
+      },
+      onError: (errorCode) => {
+        setIsListening(false);
+        recognitionRef.current = null;
+        setMicError(micErrorMessage(errorCode));
+        // Permission/device errors — exit voice mode so we don't loop.
+        if (
+          errorCode === 'not-allowed' ||
+          errorCode === 'permission-denied' ||
+          errorCode === 'audio-capture' ||
+          errorCode === 'service-not-allowed'
+        ) {
+          setVoiceMode(false);
+        }
+        // For transient errors (no-speech, network), the useEffect will
+        // pick voice mode back up.
+      },
+    });
+
+    if (!handle) {
+      setIsListening(false);
+      setMicError('Voice recognition not available in this browser.');
+      setVoiceMode(false);
+      return;
+    }
+    recognitionRef.current = handle;
+  }
+
+  function toggleVoiceMode() {
+    if (voiceMode) {
+      // Exiting voice mode — stop recognition + any TTS that's playing.
+      setVoiceMode(false);
+      recognitionRef.current?.stop();
+      cancelSpeech();
+    } else {
+      setVoiceMode(true);
+      setMicError(null);
+      // The useEffect below will start listening once it sees voiceMode=true.
+    }
+  }
+
+  // While in voice mode, restart listening whenever the chat is idle and
+  // we don't already have an active recognition session. This is what makes
+  // the loop "continuous" — after every reply finishes (disabled flips to
+  // false), the mic comes back on automatically.
+  useEffect(() => {
+    if (!voiceMode) return;
+    if (disabled) return;
+    if (recognitionRef.current) return;
+
+    startVoiceListening();
+    // We intentionally omit startVoiceListening from deps — it's recreated
+    // every render but only depends on stable refs / state setters internally.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceMode, disabled]);
+
+  // Stop any in-flight recognition when chat becomes busy (user manually
+  // sent, OR auto-send fired) so the mic doesn't fight the reply.
   useEffect(() => {
     if (disabled && recognitionRef.current) {
       recognitionRef.current.stop();
     }
   }, [disabled]);
 
+  // ── Send ────────────────────────────────────────────────────────────────
   function performSend() {
     if (!canSend) return;
     onSend(value, viaVoiceRef.current);
@@ -187,17 +294,40 @@ export function ChatInput({
           onChange={handleChange}
           onFocus={onActivity}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message…"
-          disabled={disabled}
+          placeholder={
+            voiceMode
+              ? (isListening ? 'Listening… speak naturally' : 'Voice mode on — Brandee is replying')
+              : 'Type your message…'
+          }
+          disabled={disabled || voiceMode}
           className="flex-1 resize-none bg-transparent text-content placeholder:text-muted text-[21px] leading-normal outline-none min-h-[34px] max-h-[200px] disabled:opacity-50 py-1"
         />
 
+        {/* Voice mode (continuous, hands-free, TTS replies) */}
         {micSupported && (
+          <button
+            type="button"
+            onClick={toggleVoiceMode}
+            aria-label={voiceMode ? 'Exit voice mode' : 'Start voice conversation'}
+            title={voiceMode ? 'Exit voice mode' : 'Voice conversation (hands-free)'}
+            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-150 cursor-pointer ${
+              voiceMode
+                ? 'bg-brand hover:bg-brand-dark text-white animate-pulse'
+                : 'bg-card hover:bg-card/70 text-muted hover:text-content border border-divider'
+            }`}
+          >
+            <HeadphonesIcon className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Single-shot dictation (only available outside voice mode) */}
+        {micSupported && !voiceMode && (
           <button
             type="button"
             onClick={isListening ? stopMic : startMic}
             disabled={disabled}
             aria-label={isListening ? 'Stop voice input' : 'Speak instead of typing'}
+            title="Dictate a single message"
             className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${
               isListening
                 ? 'bg-red-500/90 hover:bg-red-500 text-white animate-pulse'

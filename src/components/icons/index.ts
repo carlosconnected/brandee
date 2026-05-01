@@ -5,6 +5,7 @@ export { ConsultationsIcon }  from './ConsultationsIcon';
 export { CoursesIcon }        from './CoursesIcon';
 export { DashboardIcon }      from './DashboardIcon';
 export { DiscoverIcon }       from './DiscoverIcon';
+export { HeadphonesIcon }     from './HeadphonesIcon';
 export { MenuIcon }           from './MenuIcon';
 export { MicIcon }            from './MicIcon';
 export { PricingIcon }        from './PricingIcon';
