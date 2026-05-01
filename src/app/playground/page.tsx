@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import type { BrandeeState } from '@/types';
 import { Brandee } from '@/components/brandee/Brandee';
 import { useBrandeeState } from '@/components/brandee/useBrandeeState';
 import {
+  frameUrl,
+  TIMINGS,
   TRANSITIONS,
   TRANSITION_SEQUENCES,
   transitionKey,
@@ -22,6 +25,21 @@ const ALL_STATES: BrandeeState[] = [
   'confused',
 ];
 
+// Stage geometry — base.png is ~1024×716, state PNGs are square (1024×1024).
+// We give the stage extra vertical room so Brandee can sit AT the desk top
+// rather than fighting object-contain in a square box.
+const STAGE_WIDTH  = 420;
+const STAGE_HEIGHT = 700;
+
+// base.png native ratio
+const BASE_RATIO     = 716 / 1024;
+const BASE_DISPLAY_H = Math.round(STAGE_WIDTH * BASE_RATIO); // ~294
+
+// The default Y (in stage pixels) where Brandee's body bottom should sit.
+// This corresponds visually to "the top of the desk surface" inside base.png.
+// Each state can override this via the slider below.
+const DEFAULT_BODY_BOTTOM_Y = 460;
+
 interface LogEntry {
   id: number;
   at: string;
@@ -31,12 +49,37 @@ interface LogEntry {
   detail: string;
 }
 
+interface StateLayout {
+  bodyBottomY: number;
+  behindBase: boolean;
+}
+
+const DEFAULT_LAYOUT: StateLayout = {
+  bodyBottomY: DEFAULT_BODY_BOTTOM_Y,
+  behindBase: false,
+};
+
 export default function BrandeePlayground() {
   const { state, transitionFrame, setState, reportActivity } = useBrandeeState();
   const [log, setLog] = useState<LogEntry[]>([]);
   const [logCounter, setLogCounter] = useState(0);
 
-  // Track transitions whenever the state changes for the debug log.
+  // Per-state layout: where Brandee's body bottom sits + whether she renders
+  // behind the desk surface. All states default to the same values; user
+  // tunes each state until it composites cleanly with base.png.
+  const [layoutByState, setLayoutByState] = useState<Record<BrandeeState, StateLayout>>(
+    () =>
+      Object.fromEntries(
+        ALL_STATES.map((s) => [s, { ...DEFAULT_LAYOUT }])
+      ) as Record<BrandeeState, StateLayout>
+  );
+  const layout = layoutByState[state];
+
+  function updateLayout(patch: Partial<StateLayout>) {
+    setLayoutByState((prev) => ({ ...prev, [state]: { ...prev[state], ...patch } }));
+  }
+
+  // Track transitions for the debug log
   const [prevState, setPrevState] = useState<BrandeeState>(state);
   useEffect(() => {
     if (state === prevState) return;
@@ -51,7 +94,7 @@ export default function BrandeePlayground() {
       detail = seq.map((s) => `${s.frame} (${s.hold}ms)`).join(' → ');
     } else if (single) {
       via = 'single';
-      detail = `${single} (200ms hold)`;
+      detail = `${single} (${TIMINGS.singleTransitionHold}ms hold)`;
     }
 
     setLog((prev) =>
@@ -71,16 +114,19 @@ export default function BrandeePlayground() {
     setPrevState(state);
   }, [state, prevState, logCounter]);
 
+  // Brandee box is square at STAGE_WIDTH; her body bottom sits at bodyBottomY,
+  // which means the box top sits at (bodyBottomY - STAGE_WIDTH).
+  const brandeeBoxTop = layout.bodyBottomY - STAGE_WIDTH;
+
   return (
     <div className="min-h-screen bg-base text-content p-6 lg:p-10">
       <div className="max-w-6xl mx-auto flex flex-col gap-8">
-        {/* Header */}
         <header className="flex items-baseline justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Brandee Lab</h1>
             <p className="text-muted text-sm mt-1">
-              Manually drive the state machine. Click a state to trigger any
-              defined transition; everything else falls back to cross-fade.
+              Manually drive the state machine + tune per-state layout. Each
+              state stores its own body Y and front/back layer.
             </p>
           </div>
           <a
@@ -98,11 +144,51 @@ export default function BrandeePlayground() {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,58,237,0.18) 0%, transparent 100%)',
+                  'radial-gradient(ellipse 70% 50% at 50% 75%, rgba(124,58,237,0.18) 0%, transparent 100%)',
               }}
             />
+
             <div className="relative z-10 flex flex-col items-center gap-4">
-              <Brandee state={state} transitionFrame={transitionFrame} size={420} />
+              {/*
+                Tall stage so Brandee (square upper body, 1024×1024) and
+                base.png (1024×716, just desk+chair+legs) can stack with
+                proper overlap at the desk-top line.
+              */}
+              <div
+                className="relative"
+                style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT }}
+              >
+                {/* base.png — pinned to bottom, natural aspect ratio */}
+                <Image
+                  src={frameUrl('base.png')}
+                  alt="Desk"
+                  width={STAGE_WIDTH}
+                  height={BASE_DISPLAY_H}
+                  priority
+                  draggable={false}
+                  className={`absolute bottom-0 left-0 right-0 pointer-events-none select-none ${
+                    layout.behindBase ? 'z-20' : 'z-0'
+                  }`}
+                />
+
+                {/* Brandee — positioned so her body bottom sits at bodyBottomY */}
+                <div
+                  className="absolute z-10 left-0 right-0 flex justify-center"
+                  style={{ top: brandeeBoxTop }}
+                >
+                  <Brandee
+                    state={state}
+                    transitionFrame={transitionFrame}
+                    size={STAGE_WIDTH}
+                  />
+                </div>
+
+                {/* Reference line at body-bottom Y */}
+                <div
+                  className="absolute z-30 left-0 right-0 border-t border-dashed border-brand-light/30 pointer-events-none"
+                  style={{ top: layout.bodyBottomY }}
+                />
+              </div>
 
               <div className="flex flex-col items-center gap-1">
                 <p className="text-xs uppercase tracking-wider text-muted">Current state</p>
@@ -116,8 +202,68 @@ export default function BrandeePlayground() {
             </div>
           </section>
 
-          {/* Controls */}
           <aside className="flex flex-col gap-6">
+            {/* Layer toggle */}
+            <section>
+              <h2 className="text-xs uppercase tracking-wider text-muted mb-3">
+                Brandee layer · <span className="text-content normal-case capitalize">{state}</span>
+              </h2>
+              <div className="flex bg-card rounded-lg p-1 border border-divider">
+                <button
+                  type="button"
+                  onClick={() => updateLayout({ behindBase: false })}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    !layout.behindBase ? 'bg-brand text-white' : 'text-muted hover:text-content'
+                  }`}
+                >
+                  In front of desk
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateLayout({ behindBase: true })}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    layout.behindBase ? 'bg-brand text-white' : 'text-muted hover:text-content'
+                  }`}
+                >
+                  Behind desk
+                </button>
+              </div>
+            </section>
+
+            {/* Body Y position slider */}
+            <section>
+              <div className="flex items-baseline justify-between mb-2">
+                <h2 className="text-xs uppercase tracking-wider text-muted">
+                  Body bottom Y
+                </h2>
+                <span className="text-xs font-mono text-content">
+                  {layout.bodyBottomY}px
+                </span>
+              </div>
+              <input
+                type="range"
+                min={STAGE_WIDTH}
+                max={STAGE_HEIGHT}
+                step={1}
+                value={layout.bodyBottomY}
+                onChange={(e) => updateLayout({ bodyBottomY: Number(e.target.value) })}
+                className="w-full accent-brand cursor-pointer"
+              />
+              <p className="text-[11px] text-dim mt-2 leading-relaxed">
+                Where Brandee&apos;s body-bottom edge sits in the stage. Tune
+                until her torso/arms meet the desk top cleanly. Dashed line
+                in the stage shows the current Y.
+              </p>
+              <button
+                type="button"
+                onClick={() => updateLayout({ bodyBottomY: DEFAULT_BODY_BOTTOM_Y })}
+                className="text-[11px] text-muted hover:text-content underline underline-offset-2 mt-1 cursor-pointer"
+              >
+                reset to default ({DEFAULT_BODY_BOTTOM_Y})
+              </button>
+            </section>
+
+            {/* States grid */}
             <section>
               <h2 className="text-xs uppercase tracking-wider text-muted mb-3">States</h2>
               <div className="grid grid-cols-2 gap-2">
@@ -140,6 +286,14 @@ export default function BrandeePlayground() {
                       `}
                     >
                       <span className="capitalize">{s}</span>
+                      {layoutByState[s].behindBase && (
+                        <span
+                          title="This state renders behind the desk"
+                          className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-brand-light font-mono"
+                        >
+                          behind
+                        </span>
+                      )}
                       {hasTransition && !active && (
                         <span
                           title="A transition frame is defined for this hop"
@@ -151,8 +305,9 @@ export default function BrandeePlayground() {
                 })}
               </div>
               <p className="text-[11px] text-dim mt-2 leading-relaxed">
-                Dot = a transition frame is defined for going from the current
-                state to this one. No dot = direct cross-fade.
+                Top-right dot = a transition frame is defined for going from
+                the current state to this one. Bottom-right &ldquo;behind&rdquo;
+                = that state renders behind the desk.
               </p>
             </section>
 
@@ -162,11 +317,26 @@ export default function BrandeePlayground() {
                 <button
                   type="button"
                   onClick={reportActivity}
-                  className="px-3 py-2.5 rounded-lg text-sm font-medium border border-divider bg-card text-content hover:border-divider-strong cursor-pointer"
+                  className="px-3 py-2.5 rounded-lg text-sm font-medium border border-divider bg-card text-content hover:border-divider-strong cursor-pointer text-left"
                 >
                   reportActivity()
                   <span className="block text-[11px] text-muted font-normal mt-0.5">
                     Wakes from sleeping/bored, resets idle escalation timer
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cfg = ALL_STATES
+                      .map((s) => `  ${s}: { bodyBottomY: ${layoutByState[s].bodyBottomY}, behindBase: ${layoutByState[s].behindBase} },`)
+                      .join('\n');
+                    navigator.clipboard.writeText(`{\n${cfg}\n}`);
+                  }}
+                  className="px-3 py-2.5 rounded-lg text-sm font-medium border border-divider bg-card text-content hover:border-divider-strong cursor-pointer text-left"
+                >
+                  Copy layout config
+                  <span className="block text-[11px] text-muted font-normal mt-0.5">
+                    Copies a record of all 9 states&apos; layout to clipboard
                   </span>
                 </button>
               </div>
